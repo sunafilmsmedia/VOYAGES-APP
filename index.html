@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voyagess Uribe Labreche</title>
+<meta name="description" content="Préparer et documenter tes voyages : planète interactive, dates, collections TikTok, lieux notés et albums Drive.">
+<meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
+<style>*{margin:0}html,body{height:100%}img{max-width:100%;display:block}</style>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #FBFBFE;
+    --panel: #FFFFFF;
+    --ink: #16223C;
+    --muted: #656F86;
+    --faint: #98A0B3;
+    --line: #E7E9F2;
+    --line-strong: #D8DBE8;
+    --blue: #2B5FE3;
+    --blue-soft: #EAF0FE;
+    --blue-ink: #1C43A8;
+    --pink: #F0568C;
+    --pink-soft: #FDEBF2;
+    --pink-ink: #C43168;
+    --good: #14A06A;
+    --shadow: 0 1px 2px rgba(22,34,60,.04), 0 12px 30px -14px rgba(22,34,60,.16);
+    --shadow-lg: 0 2px 4px rgba(22,34,60,.05), 0 26px 60px -22px rgba(22,34,60,.30);
+    --radius: 18px;
+    --radius-sm: 12px;
+    --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --star: #E3E6F0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0D1220;
+      --panel: #161E33;
+      --ink: #EAEDF6;
+      --muted: #9AA3B8;
+      --faint: #6C768E;
+      --line: #26304A;
+      --line-strong: #33405F;
+      --blue: #5B87F2;
+      --blue-soft: #182446;
+      --blue-ink: #A9C1FA;
+      --pink: #F573A2;
+      --pink-soft: #351A28;
+      --pink-ink: #F9AECB;
+      --good: #35C088;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 14px 34px -16px rgba(0,0,0,.6);
+      --shadow-lg: 0 2px 6px rgba(0,0,0,.4), 0 30px 70px -24px rgba(0,0,0,.7);
+      --star: #2C3652;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #FBFBFE; --panel: #FFFFFF; --ink: #16223C; --muted: #656F86; --faint: #98A0B3;
+    --line: #E7E9F2; --line-strong: #D8DBE8; --blue: #2B5FE3; --blue-soft: #EAF0FE; --blue-ink: #1C43A8;
+    --pink: #F0568C; --pink-soft: #FDEBF2; --pink-ink: #C43168; --good:#14A06A;
+    --shadow: 0 1px 2px rgba(22,34,60,.04), 0 12px 30px -14px rgba(22,34,60,.16);
+    --shadow-lg: 0 2px 4px rgba(22,34,60,.05), 0 26px 60px -22px rgba(22,34,60,.30); --star:#E3E6F0;
+  }
+  :root[data-theme="dark"] {
+    --ground: #0D1220; --panel: #161E33; --ink: #EAEDF6; --muted: #9AA3B8; --faint: #6C768E;
+    --line: #26304A; --line-strong: #33405F; --blue: #5B87F2; --blue-soft: #182446; --blue-ink: #A9C1FA;
+    --pink: #F573A2; --pink-soft: #351A28; --pink-ink: #F9AECB; --good:#35C088;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 14px 34px -16px rgba(0,0,0,.6);
+    --shadow-lg: 0 2px 6px rgba(0,0,0,.4), 0 30px 70px -24px rgba(0,0,0,.7); --star:#2C3652;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  h1,h2,h3 { text-wrap: balance; margin: 0; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea { font-family: inherit; }
+  a { color: var(--blue); text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px clamp(16px, 4vw, 40px);
+    background: color-mix(in srgb, var(--ground) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; cursor: pointer; background: none; border: 0; padding: 0; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 11px; flex: none;
+    background: linear-gradient(135deg, var(--blue), var(--pink));
+    display: grid; place-items: center; color: #fff; font-size: 18px;
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--pink) 60%, transparent);
+  }
+  .brand-name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; line-height: 1.05; text-align: left; }
+  .brand-name .sub {
+    display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+    background: linear-gradient(90deg, var(--blue), var(--pink));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .spacer { flex: 1; }
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--muted); display: grid; place-items: center; font-size: 16px;
+    transition: .15s;
+  }
+  .icon-btn:hover { color: var(--ink); border-color: var(--line-strong); }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border-radius: 999px; border: 1px solid transparent; padding: 11px 20px;
+    font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; transition: .16s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--blue) 70%, transparent); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--blue) 75%, transparent); }
+  .btn-pink { background: var(--pink); color: #fff; box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--pink) 70%, transparent); }
+  .btn-pink:hover { transform: translateY(-1px); }
+  .btn-ghost { background: var(--panel); color: var(--ink); border-color: var(--line-strong); }
+  .btn-ghost:hover { border-color: var(--muted); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+  /* ---------- Layout ---------- */
+  .wrap { max-width: 1060px; margin: 0 auto; padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 40px) 90px; }
+
+  /* ---------- Home hero ---------- */
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 22px 0 40px; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 750; letter-spacing: -.025em; }
+  .hero h1 .grad { background: linear-gradient(100deg, var(--blue), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: clamp(15px, 2vw, 17px); max-width: 46ch; margin: 14px 0 30px; }
+
+  .planet {
+    position: relative; width: clamp(200px, 42vw, 280px); aspect-ratio: 1; border-radius: 50%;
+    overflow: hidden; margin-bottom: 34px;
+    box-shadow:
+      inset -20px -26px 50px rgba(9,17,45,.55),
+      inset 14px 16px 34px rgba(255,255,255,.25),
+      0 34px 70px -26px color-mix(in srgb, var(--blue) 55%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--pink) 14%, transparent),
+      0 0 60px 6px color-mix(in srgb, var(--pink) 22%, transparent);
+  }
+  .planet-ocean { position: absolute; inset: 0; background: radial-gradient(circle at 34% 30%, #4E82F0, #2455C9 55%, #163a86); }
+  .planet-land { position: absolute; inset: 0; display: flex; width: 200%; animation: spin 42s linear infinite; }
+  .planet-land svg { width: 50%; height: 100%; flex: none; }
+  .planet-shade { position: absolute; inset: 0; background: radial-gradient(circle at 30% 26%, rgba(255,255,255,.5), rgba(255,255,255,0) 42%); pointer-events: none; }
+  @keyframes spin { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .planet-land { animation: none; } }
+
+  /* ---------- Trip grid ---------- */
+  .section-head { display: flex; align-items: center; gap: 12px; margin: 6px 0 18px; }
+  .section-head h2 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  .section-head .count { font-size: 12.5px; color: var(--faint); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+
+  .trip-card {
+    text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); transition: .18s; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; gap: 14px; min-height: 172px;
+  }
+  .trip-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--line-strong); }
+  .trip-card .flags { font-size: 30px; line-height: 1; letter-spacing: 2px; }
+  .trip-card .title { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  .trip-card .dates { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+  .trip-card .foot { margin-top: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .countdown { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--pink-soft); color: var(--pink-ink); }
+  .countdown.past { background: var(--blue-soft); color: var(--blue-ink); }
+  .chip-stat { font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--ink) 5%, transparent); padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+
+  .add-card {
+    border: 1.5px dashed var(--line-strong); border-radius: var(--radius); background: transparent;
+    display: grid; place-items: center; gap: 10px; padding: 24px; color: var(--muted); min-height: 172px;
+    transition: .16s; font-weight: 600;
+  }
+  .add-card:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-soft); }
+  .add-card .plus { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, var(--blue), var(--pink)); color:#fff; display: grid; place-items: center; font-size: 24px; }
+
+  .empty { text-align: center; color: var(--muted); padding: 40px 20px; }
+
+  /* ---------- Trip detail ---------- */
+  .trip-head { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 8px; flex-wrap: wrap; }
+  .trip-head .flags-lg { font-size: 40px; line-height: 1; letter-spacing: 3px; }
+  .trip-head h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 750; letter-spacing: -.025em; }
+  .trip-head .meta { color: var(--muted); font-size: 14px; margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .back { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); background: none; border: 0; font-size: 14px; font-weight: 600; padding: 6px 0; margin-bottom: 14px; }
+  .back:hover { color: var(--blue); }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 22px; margin-top: 20px;
+  }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .card-head .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; flex: none; }
+  .ic.blue { background: var(--blue-soft); }
+  .ic.pink { background: var(--pink-soft); }
+  .card-head h3 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; flex: 1; }
+  .card-head .hint { font-size: 12.5px; color: var(--faint); }
+
+  .field-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .input, .date-input, textarea.input {
+    background: var(--ground); border: 1px solid var(--line-strong); border-radius: 11px;
+    padding: 10px 13px; font-size: 14px; color: var(--ink); width: 100%; transition: .15s;
+  }
+  .input:focus, .date-input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+  .input-inline { flex: 1; min-width: 180px; }
+  label.lbl { font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 6px; }
+
+  /* countries + regions */
+  .country-block { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 15px; margin-bottom: 12px; }
+  .country-block .ct { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 15px; margin-bottom: 10px; }
+  .country-block .ct .fl { font-size: 22px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px 6px 12px; border-radius: 999px;
+    background: var(--blue-soft); color: var(--blue-ink); font-size: 13px; font-weight: 600;
+  }
+  .chip button { background: none; border: 0; color: inherit; opacity: .55; font-size: 15px; line-height: 1; padding: 0 2px; }
+  .chip button:hover { opacity: 1; }
+  .chip-add { border: 1px dashed var(--line-strong); background: transparent; border-radius: 999px; padding: 6px 13px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .chip-add:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* link lists */
+  .link-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); margin-bottom: 10px; transition: .15s; background: var(--panel);
+  }
+  .link-item:hover { border-color: var(--line-strong); }
+  .link-item .lic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; font-size: 16px; color: #fff; }
+  .lic.tt { background: #111; }
+  .lic.dr { background: linear-gradient(135deg, #1FA463, #FFCF3F 60%, #2B7BF3); }
+  .link-item .lbody { flex: 1; min-width: 0; }
+  .link-item .lname { font-weight: 640; font-size: 14px; }
+  .link-item .lurl { font-size: 12.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .del { background: none; border: 0; color: var(--faint); font-size: 16px; padding: 6px; border-radius: 8px; }
+  .del:hover { color: var(--pink); background: var(--pink-soft); }
+
+  /* places */
+  .places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .place {
+    border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel);
+    display: flex; flex-direction: column;
+  }
+  .place .ph { aspect-ratio: 4/3; background: var(--ground); overflow: hidden; position: relative; }
+  .place .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .place .ph .del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.5); color: #fff; }
+  .place .ph .del:hover { background: var(--pink); }
+  .place .pb { padding: 11px 12px 13px; display: flex; flex-direction: column; gap: 8px; }
+  .place .pname { border: 0; background: none; font-size: 13.5px; font-weight: 640; color: var(--ink); width: 100%; padding: 2px 0; }
+  .place .pname:focus { outline: none; border-bottom: 1px solid var(--blue); }
+  .stars { display: flex; gap: 3px; }
+  .stars button { background: none; border: 0; font-size: 17px; color: var(--star); padding: 0; line-height: 1; transition: .1s; }
+  .stars button.on { color: var(--pink); }
+  .stars button:hover { transform: scale(1.15); }
+  .upload-tile {
+    border: 1.5px dashed var(--line-strong); border-radius: var(--radius-sm); display: grid; place-items: center;
+    gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; aspect-ratio: 4/3; text-align: center; padding: 12px;
+    transition: .15s;
+  }
+  .upload-tile:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-soft); }
+  .upload-tile .u { font-size: 26px; }
+
+  .sub-empty { color: var(--faint); font-size: 13.5px; padding: 4px 2px 2px; }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100; background: rgba(16,22,40,.5); backdrop-filter: blur(4px);
+    display: grid; place-items: center; padding: 20px; opacity: 0; animation: fade .18s forwards;
+  }
+  @keyframes fade { to { opacity: 1; } }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg);
+    width: min(560px, 100%); max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(8px) scale(.99); animation: pop .2s forwards;
+  }
+  @keyframes pop { to { transform: none; } }
+  .modal-head { padding: 20px 22px 12px; display: flex; align-items: center; gap: 12px; }
+  .modal-head h3 { font-size: 18px; font-weight: 720; letter-spacing: -.02em; flex: 1; }
+  .modal-body { padding: 0 22px; overflow-y: auto; }
+  .modal-foot { padding: 16px 22px 20px; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 12px; }
+  .search-box { position: relative; margin: 6px 0 14px; }
+  .search-box input { padding-left: 38px; }
+  .search-box .si { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--faint); }
+
+  .country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; padding-bottom: 8px; }
+  .country-opt {
+    display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--panel); font-size: 13.5px; font-weight: 550; color: var(--ink); text-align: left; transition: .12s;
+  }
+  .country-opt:hover { border-color: var(--line-strong); background: var(--ground); }
+  .country-opt.sel { border-color: var(--blue); background: var(--blue-soft); color: var(--blue-ink); font-weight: 650; }
+  .country-opt .fl { font-size: 19px; flex: none; }
+  .country-opt .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .country-opt .ck { color: var(--blue); opacity: 0; }
+  .country-opt.sel .ck { opacity: 1; }
+
+  .selbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 20px; }
+  .selbar .selpill { background: var(--pink-soft); color: var(--pink-ink); padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 650; }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: var(--ground); padding: 11px 20px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+    box-shadow: var(--shadow-lg); z-index: 200; opacity: 0; transition: .25s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .hidden { display: none !important; }
+</style>
+
+<div class="topbar">
+  <button class="brand" onclick="go('home')" aria-label="Accueil">
+    <span class="brand-mark">✈</span>
+    <span class="brand-name">Voyagess<span class="sub">Uribe Labreche</span></span>
+  </button>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="themeBtn" title="Changer le thème" aria-label="Changer le thème">◐</button>
+</div>
+
+<div id="app"></div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Data: countries (FR + flag emoji) ============ */
+const COUNTRIES = [
+  ["🇫🇷","France"],["🇮🇹","Italie"],["🇪🇸","Espagne"],["🇵🇹","Portugal"],["🇬🇷","Grèce"],
+  ["🇬🇧","Royaume-Uni"],["🇮🇪","Irlande"],["🇩🇪","Allemagne"],["🇳🇱","Pays-Bas"],["🇧🇪","Belgique"],
+  ["🇨🇭","Suisse"],["🇦🇹","Autriche"],["🇨🇿","Tchéquie"],["🇭🇺","Hongrie"],["🇵🇱","Pologne"],
+  ["🇭🇷","Croatie"],["🇸🇮","Slovénie"],["🇷🇴","Roumanie"],["🇧🇬","Bulgarie"],["🇷🇸","Serbie"],
+  ["🇸🇪","Suède"],["🇳🇴","Norvège"],["🇩🇰","Danemark"],["🇫🇮","Finlande"],["🇮🇸","Islande"],
+  ["🇪🇪","Estonie"],["🇱🇻","Lettonie"],["🇱🇹","Lituanie"],["🇹🇷","Turquie"],["🇲🇹","Malte"],
+  ["🇺🇸","États-Unis"],["🇨🇦","Canada"],["🇲🇽","Mexique"],["🇨🇺","Cuba"],["🇩🇴","Rép. dominicaine"],
+  ["🇯🇲","Jamaïque"],["🇨🇷","Costa Rica"],["🇵🇦","Panama"],["🇬🇹","Guatemala"],["🇧🇸","Bahamas"],
+  ["🇧🇷","Brésil"],["🇦🇷","Argentine"],["🇨🇱","Chili"],["🇵🇪","Pérou"],["🇨🇴","Colombie"],
+  ["🇧🇴","Bolivie"],["🇺🇾","Uruguay"],["🇪🇨","Équateur"],["🇯🇵","Japon"],["🇰🇷","Corée du Sud"],
+  ["🇨🇳","Chine"],["🇹🇭","Thaïlande"],["🇻🇳","Vietnam"],["🇰🇭","Cambodge"],["🇱🇦","Laos"],
+  ["🇮🇩","Indonésie"],["🇵🇭","Philippines"],["🇲🇾","Malaisie"],["🇸🇬","Singapour"],["🇮🇳","Inde"],
+  ["🇳🇵","Népal"],["🇱🇰","Sri Lanka"],["🇦🇪","Émirats A. U."],["🇶🇦","Qatar"],["🇮🇱","Israël"],
+  ["🇯🇴","Jordanie"],["🇲🇦","Maroc"],["🇹🇳","Tunisie"],["🇪🇬","Égypte"],["🇿🇦","Afrique du Sud"],
+  ["🇰🇪","Kenya"],["🇹🇿","Tanzanie"],["🇳🇦","Namibie"],["🇸🇳","Sénégal"],["🇲🇺","Maurice"],
+  ["🇸🇨","Seychelles"],["🇦🇺","Australie"],["🇳🇿","Nouvelle-Zélande"],["🇫🇯","Fidji"],["🇵🇫","Polynésie fr."],
+  ["🇬🇪","Géorgie"],["🇦🇲","Arménie"],["🇺🇿","Ouzbékistan"],["🇱🇧","Liban"],["🇴🇲","Oman"],
+  ["🇲🇲","Birmanie"],["🇧🇹","Bhoutan"],["🇲🇻","Maldives"],["🇨🇾","Chypre"],["🇦🇱","Albanie"],
+  ["🇲🇪","Monténégro"],["🇸🇰","Slovaquie"],["🇱🇺","Luxembourg"],["🇲🇨","Monaco"],["🇦🇩","Andorre"]
+];
+
+/* Continents SVG (decorative, edges kept as ocean so the spin seam is invisible) */
+const LAND = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g fill="#A9DcC0" fill-opacity="0"></g><g fill="#9FD9BE">
+<path d="M22 24 q6 -5 12 -2 q4 3 2 8 q3 4 -1 8 q2 5 -2 7 q-4 1 -7 -2 q-5 1 -7 -3 q-3 -4 0 -9 q-3 -6 1 -10 q1 -3 3 -2 Z"/>
+<path d="M30 55 q5 -3 8 1 q3 5 1 11 q1 8 -3 13 q-3 4 -6 1 q-3 -4 -2 -10 q-2 -7 0 -12 q0 -4 2 -5 Z"/>
+<path d="M46 26 q7 -4 13 -1 q6 2 5 7 q4 2 2 6 q-3 4 -8 3 q-4 3 -9 0 q-4 -2 -3 -7 q-4 -4 -1 -9 q1 -3 4 -2 Z"/>
+<path d="M50 40 q6 -1 8 4 q5 3 4 10 q2 7 -2 13 q-3 6 -7 4 q-4 -2 -4 -9 q-4 -6 -2 -13 q0 -8 3 -9 Z"/>
+<path d="M66 22 q9 -4 17 -1 q7 2 8 8 q5 3 3 8 q-3 5 -10 4 q-6 3 -13 0 q-6 -2 -6 -8 q-5 -5 -1 -12 q2 -5 6 -4 Z"/>
+<path d="M78 66 q6 -3 10 1 q4 4 1 9 q-3 4 -8 3 q-5 0 -6 -5 q-2 -5 3 -8 Z"/>
+</g></svg>`;
+
+/* ============ State + storage (IndexedDB) ============ */
+let STATE = { trips: [] };
+let VIEW = { name: 'home', tripId: null };
+const DB_NAME = 'vul-db', STORE = 'kv';
+
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function loadState() {
+  try {
+    const db = await openDB();
+    const v = await new Promise((res, rej) => {
+      const t = db.transaction(STORE, 'readonly').objectStore(STORE).get('state');
+      t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error);
+    });
+    if (v && v.trips) STATE = v;
+  } catch (e) {
+    try { const ls = localStorage.getItem('vul-state'); if (ls) STATE = JSON.parse(ls); } catch (_) {}
+  }
+}
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      const db = await openDB();
+      const t = db.transaction(STORE, 'readwrite');
+      t.objectStore(STORE).put(STATE, 'state');
+    } catch (e) {
+      try { localStorage.setItem('vul-state', JSON.stringify(STATE)); } catch (_) {}
+    }
+  }, 350);
+}
+
+/* ============ Helpers ============ */
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = s => (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = sel => document.querySelector(sel);
+const trip = () => STATE.trips.find(t => t.id === VIEW.tripId);
+
+function toast(msg) {
+  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+const MONTHS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function fmtDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso + 'T00:00:00');
+  return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+}
+function dateRange(t) {
+  if (t.startDate && t.endDate) return fmtDate(t.startDate) + ' → ' + fmtDate(t.endDate);
+  if (t.startDate) return 'Dès le ' + fmtDate(t.startDate);
+  return 'Dates à définir';
+}
+function daysUntil(iso) {
+  if (!iso) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d = new Date(iso + 'T00:00:00');
+  return Math.round((d - now) / 86400000);
+}
+function countdownLabel(t) {
+  const end = t.endDate || t.startDate;
+  const startD = daysUntil(t.startDate);
+  if (startD === null) return null;
+  if (startD > 0) return { txt: startD === 1 ? 'Demain !' : 'Dans ' + startD + ' jours', past: false };
+  const endD = daysUntil(end);
+  if (endD !== null && endD >= 0) return { txt: 'En cours ✦', past: false };
+  return { txt: 'Souvenir', past: true };
+}
+
+/* ============ Router ============ */
+function go(name, tripId) { VIEW = { name, tripId: tripId || null }; render(); window.scrollTo(0, 0); }
+
+function render() {
+  const app = $('#app');
+  if (VIEW.name === 'trip' && trip()) app.innerHTML = renderTrip(trip());
+  else { VIEW.name = 'home'; app.innerHTML = renderHome(); }
+}
+
+/* ============ Home ============ */
+function renderHome() {
+  const trips = STATE.trips;
+  const cards = trips.map(t => {
+    const cd = countdownLabel(t);
+    const nPlaces = (t.places || []).length, nTt = (t.tiktoks || []).length;
+    return `<button class="trip-card" onclick="go('trip','${t.id}')">
+      <div class="flags">${(t.countries||[]).map(c => c.flag).join(' ')}</div>
+      <div>
+        <div class="title">${esc(t.name)}</div>
+        <div class="dates">📅 ${esc(dateRange(t))}</div>
+      </div>
+      <div class="foot">
+        ${cd ? `<span class="countdown ${cd.past?'past':''}">${cd.txt}</span>` : ''}
+        ${nPlaces ? `<span class="chip-stat">${nPlaces} lieu${nPlaces>1?'x':''}</span>` : ''}
+        ${nTt ? `<span class="chip-stat">${nTt} TikTok</span>` : ''}
+      </div>
+    </button>`;
+  }).join('');
+
+  return `
+  <div class="wrap">
+    <div class="hero">
+      <div class="planet" aria-hidden="true">
+        <div class="planet-ocean"></div>
+        <div class="planet-land">${LAND}${LAND}</div>
+        <div class="planet-shade"></div>
+      </div>
+      <h1>Prépare & documente <span class="grad">tes voyages</span></h1>
+      <p>Choisis les pays sur la planète, fixe les dates, colle tes collections TikTok, note les lieux visités et garde tes albums au même endroit.</p>
+      <button class="btn btn-primary" style="padding:13px 26px;font-size:15.5px" onclick="openPlanner()">＋ Préparer un voyage</button>
+    </div>
+
+    <div class="section-head">
+      <h2>Mes voyages</h2>
+      <span class="count">${trips.length ? trips.length + ' voyage'+(trips.length>1?'s':'') : ''}</span>
+    </div>
+    ${trips.length ? `<div class="grid">${cards}
+      <button class="add-card" onclick="openPlanner()"><span class="plus">＋</span>Nouveau voyage</button>
+    </div>` : `<div class="empty">
+        <div style="font-size:34px;margin-bottom:8px">🧳</div>
+        Aucun voyage pour l'instant.<br>Clique sur <b>Préparer un voyage</b> pour commencer.
+      </div>`}
+  </div>`;
+}
+
+/* ============ Planner modal ============ */
+let plannerSel = [];
+let plannerSearch = '';
+function openPlanner() {
+  plannerSel = []; plannerSearch = '';
+  renderPlanner();
+}
+function closeModal() { $('#modalRoot').innerHTML = ''; }
+function renderPlanner() {
+  const q = plannerSearch.trim().toLowerCase();
+  const list = COUNTRIES.filter(c => !q || c[1].toLowerCase().includes(q));
+  const opts = list.map(c => {
+    const sel = plannerSel.includes(c[1]);
+    return `<button class="country-opt ${sel?'sel':''}" onclick="togglePlan('${esc(c[1])}')">
+      <span class="fl">${c[0]}</span><span class="nm">${esc(c[1])}</span><span class="ck">✓</span>
+    </button>`;
+  }).join('');
+  const selHtml = plannerSel.length
+    ? plannerSel.map(n => `<span class="selpill">${countryFlag(n)} ${esc(n)}</span>`).join('')
+    : `<span style="color:var(--faint);font-size:13px">Aucun pays sélectionné</span>`;
+
+  $('#modalRoot').innerHTML = `
+  <div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <span class="brand-mark" style="width:30px;height:30px;font-size:15px;border-radius:9px">🌍</span>
+        <h3>Où pars-tu ?</h3>
+        <button class="icon-btn" onclick="closeModal()" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);font-size:13.5px;margin:2px 0 10px">Choisis un ou plusieurs pays — plusieurs si ton voyage en enchaîne plusieurs.</p>
+        <div class="search-box">
+          <span class="si">🔍</span>
+          <input class="input" id="planSearch" placeholder="Rechercher un pays…" value="${esc(plannerSearch)}" autocomplete="off">
+        </div>
+        <div class="country-grid">${opts || '<div class="sub-empty">Aucun pays trouvé.</div>'}</div>
+      </div>
+      <div class="modal-foot">
+        <div class="selbar" style="flex:1">${selHtml}</div>
+        <button class="btn btn-primary btn-sm" ${plannerSel.length?'':'disabled'} onclick="createTrip()">Créer le voyage →</button>
+      </div>
+    </div>
+  </div>`;
+
+  const s = $('#planSearch');
+  if (s) {
+    s.oninput = e => {
+      plannerSearch = e.target.value;
+      const cg = document.querySelector('.country-grid');
+      const qq = plannerSearch.trim().toLowerCase();
+      const ll = COUNTRIES.filter(c => !qq || c[1].toLowerCase().includes(qq));
+      cg.innerHTML = ll.map(c => {
+        const sel = plannerSel.includes(c[1]);
+        return `<button class="country-opt ${sel?'sel':''}" onclick="togglePlan('${esc(c[1])}')">
+          <span class="fl">${c[0]}</span><span class="nm">${esc(c[1])}</span><span class="ck">✓</span></button>`;
+      }).join('') || '<div class="sub-empty">Aucun pays trouvé.</div>';
+    };
+  }
+}
+function countryFlag(name) { const c = COUNTRIES.find(x => x[1] === name); return c ? c[0] : '🏳️'; }
+function togglePlan(name) {
+  const i = plannerSel.indexOf(name);
+  if (i >= 0) plannerSel.splice(i, 1); else plannerSel.push(name);
+  // update selbar + footer button + option states without losing search field focus
+  document.querySelectorAll('.country-opt').forEach(b => {
+    const nm = b.querySelector('.nm').textContent;
+    b.classList.toggle('sel', plannerSel.includes(nm));
+  });
+  const bar = document.querySelector('.selbar');
+  bar.innerHTML = plannerSel.length
+    ? plannerSel.map(n => `<span class="selpill">${countryFlag(n)} ${esc(n)}</span>`).join('')
+    : `<span style="color:var(--faint);font-size:13px">Aucun pays sélectionné</span>`;
+  document.querySelector('.modal-foot .btn').disabled = plannerSel.length === 0;
+}
+function createTrip() {
+  if (!plannerSel.length) return;
+  const names = plannerSel.slice();
+  const name = names.length <= 2 ? names.join(' & ') : names.slice(0,2).join(', ') + ' +' + (names.length-2);
+  const t = {
+    id: uid(),
+    name,
+    createdAt: new Date().toISOString(),
+    countries: names.map(n => ({ name: n, flag: countryFlag(n), regions: [] })),
+    startDate: '', endDate: '',
+    tiktoks: [], places: [], albums: []
+  };
+  STATE.trips.unshift(t);
+  save(); closeModal(); go('trip', t.id);
+  toast('Voyage créé ✦');
+}
+
+/* ============ Trip detail ============ */
+function renderTrip(t) {
+  const cd = countdownLabel(t);
+  return `
+  <div class="wrap">
+    <button class="back" onclick="go('home')">← Tous mes voyages</button>
+    <div class="trip-head">
+      <div class="flags-lg">${t.countries.map(c => c.flag).join(' ')}</div>
+      <div style="flex:1;min-width:200px">
+        <h1 contenteditable="true" spellcheck="false" onblur="renameTrip('${t.id}',this.textContent)" style="outline:none">${esc(t.name)}</h1>
+        <div class="meta">
+          <span>📅 ${esc(dateRange(t))}</span>
+          ${cd ? `<span class="countdown ${cd.past?'past':''}">${cd.txt}</span>` : ''}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="deleteTrip('${t.id}')" style="color:var(--pink-ink)">🗑 Supprimer</button>
+    </div>
+
+    ${cardDates(t)}
+    ${cardCountries(t)}
+    ${cardTiktok(t)}
+    ${cardPlaces(t)}
+    ${cardAlbums(t)}
+  </div>`;
+}
+
+function cardDates(t) {
+  return `<div class="card">
+    <div class="card-head"><span class="ic pink">📅</span><h3>Dates du voyage</h3></div>
+    <div class="field-row">
+      <div style="flex:1;min-width:150px"><label class="lbl">Départ</label>
+        <input type="date" class="date-input" value="${t.startDate||''}" onchange="setDate('${t.id}','startDate',this.value)"></div>
+      <div style="flex:1;min-width:150px"><label class="lbl">Retour</label>
+        <input type="date" class="date-input" value="${t.endDate||''}" onchange="setDate('${t.id}','endDate',this.value)"></div>
+    </div>
+  </div>`;
+}
+
+function cardCountries(t) {
+  const blocks = t.countries.map((c, ci) => {
+    const chips = (c.regions||[]).map((r, ri) =>
+      `<span class="chip">${esc(r)}<button onclick="delRegion('${t.id}',${ci},${ri})" aria-label="Retirer">✕</button></span>`
+    ).join('');
+    return `<div class="country-block">
+      <div class="ct"><span class="fl">${c.flag}</span>${esc(c.name)}</div>
+      <div class="chips">
+        ${chips}
+        <button class="chip-add" onclick="addRegion('${t.id}',${ci})">＋ Région / ville</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="card">
+    <div class="card-head"><span class="ic blue">🗺️</span><h3>Pays & régions à visiter</h3>
+      <span class="hint">Ajoute les régions ou villes prévues</span></div>
+    ${blocks}
+  </div>`;
+}
+
+function cardTiktok(t) {
+  const items = (t.tiktoks||[]).map(x => `<div class="link-item">
+    <span class="lic tt">♪</span>
+    <div class="lbody"><div class="lname">${esc(x.label||'Collection TikTok')}</div>
+      <div class="lurl">${esc(x.url)}</div></div>
+    <a class="btn btn-ghost btn-sm" href="${esc(x.url)}" target="_blank" rel="noopener">Ouvrir ↗</a>
+    <button class="del" onclick="delItem('${t.id}','tiktoks','${x.id}')" aria-label="Supprimer">🗑</button>
+  </div>`).join('');
+  return `<div class="card">
+    <div class="card-head"><span class="ic pink">♪</span><h3>Collections TikTok</h3>
+      <span class="hint">Idées repérées avant le voyage</span></div>
+    ${items || '<div class="sub-empty">Aucune collection pour l’instant.</div>'}
+    <div class="field-row" style="margin-top:12px">
+      <input class="input input-inline" id="tt-url-${t.id}" placeholder="Colle un lien TikTok…">
+      <input class="input" style="flex:.6;min-width:130px" id="tt-lbl-${t.id}" placeholder="Titre (facultatif)">
+      <button class="btn btn-pink btn-sm" onclick="addTiktok('${t.id}')">Ajouter</button>
+    </div>
+  </div>`;
+}
+
+function cardPlaces(t) {
+  const tiles = (t.places||[]).map(p => `<div class="place">
+    <div class="ph"><img src="${p.img}" alt="${esc(p.name||'Lieu')}">
+      <button class="del" onclick="delItem('${t.id}','places','${p.id}')" aria-label="Supprimer">✕</button></div>
+    <div class="pb">
+      <input class="pname" value="${esc(p.name||'')}" placeholder="Nom du lieu…" onchange="setPlaceName('${t.id}','${p.id}',this.value)">
+      <div class="stars">${[1,2,3,4,5].map(n =>
+        `<button class="${n<=(p.rating||0)?'on':''}" onclick="setRating('${t.id}','${p.id}',${n})" aria-label="${n} étoiles">★</button>`).join('')}</div>
+    </div>
+  </div>`).join('');
+  return `<div class="card">
+    <div class="card-head"><span class="ic blue">📸</span><h3>Lieux visités</h3>
+      <span class="hint">Screenshots + note sur 5</span></div>
+    <div class="places-grid">
+      ${tiles}
+      <label class="upload-tile">
+        <span class="u">＋</span>Ajouter des screenshots
+        <input type="file" accept="image/*" multiple class="hidden" onchange="addPlaces('${t.id}',this)">
+      </label>
+    </div>
+    ${(t.places||[]).length ? '' : '<div class="sub-empty" style="margin-top:10px">Importe des captures d’écran des lieux visités et donne-leur une note.</div>'}
+  </div>`;
+}
+
+function cardAlbums(t) {
+  const items = (t.albums||[]).map(x => `<div class="link-item">
+    <span class="lic dr">▲</span>
+    <div class="lbody"><div class="lname">${esc(x.name||'Album Drive')}</div>
+      <div class="lurl">${esc(x.url)}</div></div>
+    <a class="btn btn-ghost btn-sm" href="${esc(x.url)}" target="_blank" rel="noopener">Ouvrir ↗</a>
+    <button class="del" onclick="delItem('${t.id}','albums','${x.id}')" aria-label="Supprimer">🗑</button>
+  </div>`).join('');
+  return `<div class="card">
+    <div class="card-head"><span class="ic blue">🖼️</span><h3>Albums photos (Drive)</h3>
+      <span class="hint">Liens vers tes dossiers Google Drive</span></div>
+    ${items || '<div class="sub-empty">Aucun album lié.</div>'}
+    <div class="field-row" style="margin-top:12px">
+      <input class="input input-inline" id="dr-url-${t.id}" placeholder="Colle un lien Drive…">
+      <input class="input" style="flex:.6;min-width:130px" id="dr-lbl-${t.id}" placeholder="Nom de l’album">
+      <button class="btn btn-primary btn-sm" onclick="addAlbum('${t.id}')">Ajouter</button>
+    </div>
+  </div>`;
+}
+
+/* ============ Mutations ============ */
+function withTrip(id, fn) { const t = STATE.trips.find(x => x.id === id); if (t) { fn(t); save(); } }
+
+function renameTrip(id, name) { withTrip(id, t => { t.name = name.trim() || t.name; }); }
+function deleteTrip(id) {
+  const t = STATE.trips.find(x => x.id === id);
+  if (!confirm('Supprimer le voyage « ' + (t?t.name:'') + ' » et tout son contenu ?')) return;
+  STATE.trips = STATE.trips.filter(x => x.id !== id); save(); go('home'); toast('Voyage supprimé');
+}
+function setDate(id, key, val) { withTrip(id, t => { t[key] = val; }); render(); }
+
+function addRegion(id, ci) {
+  const name = prompt('Région ou ville à visiter :');
+  if (!name || !name.trim()) return;
+  withTrip(id, t => t.countries[ci].regions.push(name.trim())); render();
+}
+function delRegion(id, ci, ri) { withTrip(id, t => t.countries[ci].regions.splice(ri, 1)); render(); }
+
+function addTiktok(id) {
+  const url = $('#tt-url-'+id).value.trim(); if (!url) return;
+  const label = $('#tt-lbl-'+id).value.trim();
+  withTrip(id, t => t.tiktoks.push({ id: uid(), url: normUrl(url), label })); render();
+}
+function addAlbum(id) {
+  const url = $('#dr-url-'+id).value.trim(); if (!url) return;
+  const name = $('#dr-lbl-'+id).value.trim();
+  withTrip(id, t => t.albums.push({ id: uid(), url: normUrl(url), name })); render();
+}
+function normUrl(u) { return /^https?:\/\//i.test(u) ? u : 'https://' + u; }
+function delItem(id, key, itemId) { withTrip(id, t => { t[key] = t[key].filter(x => x.id !== itemId); }); render(); }
+
+function setPlaceName(id, pid, val) { withTrip(id, t => { const p = t.places.find(x => x.id === pid); if (p) p.name = val; }); }
+function setRating(id, pid, n) { withTrip(id, t => { const p = t.places.find(x => x.id === pid); if (p) p.rating = (p.rating === n ? 0 : n); }); render(); }
+
+/* image import with compression */
+function addPlaces(id, input) {
+  const files = Array.from(input.files || []); if (!files.length) return;
+  let done = 0;
+  files.forEach(f => {
+    if (!f.type.startsWith('image/')) { if (++done === files.length) render(); return; }
+    compress(f, dataUrl => {
+      withTrip(id, t => t.places.push({ id: uid(), img: dataUrl, name: '', rating: 0 }));
+      if (++done === files.length) { render(); toast(files.length + ' lieu' + (files.length>1?'x ajoutés':' ajouté') + ' ✦'); }
+    });
+  });
+  input.value = '';
+}
+function compress(file, cb) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1400; let { width: w, height: h } = img;
+      if (w > max || h > max) { const s = Math.min(max/w, max/h); w = Math.round(w*s); h = Math.round(h*s); }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(cv.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => cb(reader.result);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ============ Theme ============ */
+function initTheme() {
+  const saved = localStorage.getItem('vul-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  $('#themeBtn').onclick = () => {
+    const cur = document.documentElement.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('vul-theme', next);
+  };
+}
+
+/* ============ Boot ============ */
+(async function () {
+  initTheme();
+  await loadState();
+  render();
+})();
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
