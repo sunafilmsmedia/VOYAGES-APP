@@ -99,3 +99,30 @@ do $$ begin
   exception when duplicate_object then null;
   end;
 end $$;
+
+-- ============================================================
+-- 7) Chat de l'espace (à exécuter aussi si déjà fait le reste)
+-- ============================================================
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  space_id uuid references public.spaces(id) on delete cascade,
+  user_id  uuid references auth.users(id),
+  author text,
+  text text not null,
+  created_at timestamptz default now()
+);
+create index if not exists messages_space_idx on public.messages(space_id, created_at);
+
+alter table public.messages enable row level security;
+drop policy if exists messages_select on public.messages;
+drop policy if exists messages_insert on public.messages;
+create policy messages_select on public.messages
+  for select using (public.is_member(space_id));
+create policy messages_insert on public.messages
+  for insert with check (public.is_member(space_id) and user_id = auth.uid());
+
+alter table public.messages replica identity full;
+do $$ begin
+  begin alter publication supabase_realtime add table public.messages;
+  exception when duplicate_object then null; end;
+end $$;

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde interactive, cartes-pays réalistes avec villes, comptes et espace partagé.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde, cartes-pays, comptes, espace partagé et chat en temps réel.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -265,6 +265,26 @@
   .sb-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
   .sb-val { font-family: ui-monospace, Menlo, monospace; font-size: 19px; font-weight: 700; letter-spacing: .14em; color: var(--blue-ink); background: var(--blue-soft); border: 1px solid transparent; padding: 5px 12px; border-radius: 9px; transition: .15s; }
   @media (max-width: 640px) { .space-banner { gap: 10px; } .sb-share { width: 100%; } .sb-code { flex-direction: row; align-items: center; gap: 8px; } }
+
+  /* Chat de l'espace */
+  .chat-fab { position: fixed; right: 18px; bottom: 18px; z-index: 120; width: 56px; height: 56px; border-radius: 50%; border: 0; background: linear-gradient(135deg, var(--blue), var(--pink)); color: #fff; font-size: 24px; box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--pink) 55%, transparent); display: grid; place-items: center; transition: transform .15s; }
+  .chat-fab:hover { transform: translateY(-2px); }
+  .chat-badge { position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--pink); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--ground); }
+  .chat-panel { position: fixed; right: 18px; bottom: 84px; z-index: 120; width: min(360px, calc(100vw - 28px)); height: min(70vh, 520px); background: var(--panel); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; opacity: 0; transform: translateY(12px) scale(.98); pointer-events: none; transition: opacity .18s, transform .18s; }
+  .chat-panel.open { opacity: 1; transform: none; pointer-events: auto; }
+  .chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--line); }
+  .chat-title { font-weight: 700; font-size: 15px; flex: 1; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .chat-empty { margin: auto; color: var(--faint); font-size: 15px; }
+  .cmsg { max-width: 82%; align-self: flex-start; }
+  .cmsg.me { align-self: flex-end; }
+  .cmsg-a { font-size: 11px; color: var(--faint); font-weight: 600; margin: 0 0 2px 12px; }
+  .cmsg-b { background: var(--ground); border: 1px solid var(--line); padding: 8px 12px; border-radius: 14px; border-bottom-left-radius: 4px; font-size: 14px; line-height: 1.35; word-wrap: break-word; overflow-wrap: anywhere; }
+  .cmsg.me .cmsg-b { background: var(--blue); color: #fff; border-color: transparent; border-bottom-left-radius: 14px; border-bottom-right-radius: 4px; }
+  .chat-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--line); }
+  .chat-input input { flex: 1; background: var(--ground); border: 1px solid var(--line-strong); border-radius: 999px; padding: 10px 14px; font-size: 14px; color: var(--ink); }
+  .chat-input input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+  @media (max-width: 640px) { .chat-panel { right: 8px; left: 8px; width: auto; bottom: 78px; height: min(72vh, 460px); } .chat-fab { right: 14px; bottom: 14px; } .chat-input input { font-size: 16px; } }
 </style>
 
 <div class="topbar">
@@ -337,7 +357,7 @@ async function routeCloud(){
   if(!SPACE) await ensureSpace();
   mountAccountBtn();
   if(!SPACE){ renderSpaceGate('choose'); return; }
-  await loadTripsCloud(); subscribeRealtime(); render(); maybeOfferImport();
+  await loadTripsCloud(); subscribeRealtime(); render(); maybeOfferImport(); chatMount();
 }
 async function ensureSpace(){
   try{ const { data,error }=await sb.from('space_members').select('spaces(id,name,invite_code)').limit(1);
@@ -366,7 +386,7 @@ function subscribeRealtime(){
 function trAuth(m){ m=m||''; if(/Invalid login/i.test(m)) return 'Email ou mot de passe incorrect.'; if(/already registered/i.test(m)) return 'Cet email a déjà un compte — connecte-toi.'; if(/at least 6/i.test(m)) return 'Mot de passe : 6 caractères minimum.'; if(/valid email/i.test(m)) return 'Entre un email valide.'; return m; }
 async function doSignUp(email,pw,ferr){ const { data,error }=await sb.auth.signUp({email,password:pw}); if(error){ ferr(trAuth(error.message)); return; } if(!data.session) ferr('Compte créé ✦ Si un email de confirmation arrive, clique-le, puis connecte-toi.'); }
 async function doSignIn(email,pw,ferr){ const { error }=await sb.auth.signInWithPassword({email,password:pw}); if(error) ferr(trAuth(error.message)); }
-async function doSignOut(){ try{ if(realtimeChan) sb.removeChannel(realtimeChan); }catch(_){} SPACE=null; STATE.trips=[]; importOffered=false; await sb.auth.signOut(); }
+async function doSignOut(){ try{ if(realtimeChan) sb.removeChannel(realtimeChan); }catch(_){} chatUnmount(); SPACE=null; STATE.trips=[]; importOffered=false; await sb.auth.signOut(); }
 async function doCreateSpace(name,ferr){ try{ const { data,error }=await sb.rpc('create_space',{p_name:name||'Notre espace'}); if(error) throw error; SPACE=data; routeCloud(); }catch(e){ ferr("Impossible de créer l'espace : "+(e.message||e)); } }
 async function doJoinSpace(code,ferr){ const c=(code||'').trim().toUpperCase(); if(!c){ ferr('Entre un code.'); return; } try{ const { data,error }=await sb.rpc('join_space',{p_code:c}); if(error) throw error; if(!data){ ferr('Code introuvable.'); return; } SPACE=data; routeCloud(); }catch(e){ ferr('Code invalide ou introuvable.'); } }
 async function maybeOfferImport(){ if(importOffered) return; importOffered=true; if(STATE.trips.length>0) return;
@@ -399,6 +419,31 @@ function spaceBanner(){ if(!(CLOUD&&session&&SPACE)) return ''; const code=SPACE
     +'</div>'; }
 function shareSpace(){ if(!SPACE) return; const code=SPACE.invite_code; const txt='Rejoins notre espace « '+SPACE.name+' » sur Voyages Uribe Labreche 🌍✈️\nCode : '+code;
   if(navigator.share){ navigator.share({title:'Voyages Uribe Labreche',text:txt}).catch(()=>{}); } else { try{ navigator.clipboard.writeText(txt); }catch(_){} toast('Invitation copiée ✦'); } }
+
+/* ---- Chat de l'espace (temps réel) ---- */
+let CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false};
+function chatMount(){ if(CHAT.mounted||!isCloudReady()) return; CHAT.mounted=true;
+  let root=$('#chatRoot'); if(!root){ root=document.createElement('div'); root.id='chatRoot'; document.body.appendChild(root); }
+  root.innerHTML='<button class="chat-fab" id="chatFab" onclick="chatToggle()" aria-label="Messages">💬<span class="chat-badge" id="chatBadge" style="display:none">0</span></button>'
+    +'<div class="chat-panel" id="chatPanel"><div class="chat-head"><span class="chat-title">💬 '+esc(SPACE?SPACE.name:'Chat')+'</span><button class="icon-btn" onclick="chatToggle()" aria-label="Fermer">✕</button></div>'
+    +'<div class="chat-msgs" id="chatMsgs"></div>'
+    +'<form class="chat-input" onsubmit="chatSend(event)"><input id="chatText" placeholder="Écris un message…" autocomplete="off" maxlength="1000"><button class="btn btn-primary btn-sm" type="submit">Envoyer</button></form></div>';
+  chatLoad(); chatSubscribe();
+}
+function chatToggle(){ CHAT.open=!CHAT.open; const p=$('#chatPanel'); if(p)p.classList.toggle('open',CHAT.open); if(CHAT.open){ CHAT.unread=0; chatBadge(); setTimeout(()=>{ const i=$('#chatText'); if(i)i.focus(); chatScroll(); },60); } }
+function chatBadge(){ const b=$('#chatBadge'); if(!b)return; if(CHAT.unread>0&&!CHAT.open){ b.style.display=''; b.textContent=CHAT.unread>9?'9+':CHAT.unread; } else b.style.display='none'; }
+async function chatLoad(){ try{ const { data,error }=await sb.from('messages').select('id,user_id,author,text,created_at').eq('space_id',SPACE.id).order('created_at',{ascending:true}).limit(100); if(error)throw error; CHAT.msgs=data||[]; chatRenderMsgs(); }catch(e){ console.warn('chat load',e); } }
+function chatSubscribe(){ try{ if(CHAT.chan) sb.removeChannel(CHAT.chan);
+  CHAT.chan=sb.channel('msg-'+SPACE.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'space_id=eq.'+SPACE.id},(p)=>{ const m=p.new; if(!m||CHAT.msgs.some(x=>x.id===m.id))return; CHAT.msgs.push(m); if(!CHAT.open && m.user_id!==session.user.id){ CHAT.unread++; chatBadge(); } chatRenderMsgs(); }).subscribe();
+}catch(e){ console.warn('chat rt',e); } }
+function chatAuthor(m){ const a=m.author||''; return a.includes('@')?a.split('@')[0]:(a||'?'); }
+function chatRenderMsgs(){ const box=$('#chatMsgs'); if(!box)return; if(!CHAT.msgs.length){ box.innerHTML='<div class="chat-empty">Dis allo 👋</div>'; return; }
+  box.innerHTML=CHAT.msgs.map(m=>{ const me=m.user_id===session.user.id; return '<div class="cmsg'+(me?' me':'')+'">'+(me?'':'<div class="cmsg-a">'+esc(chatAuthor(m))+'</div>')+'<div class="cmsg-b">'+esc(m.text)+'</div></div>'; }).join(''); chatScroll(); }
+function chatScroll(){ const box=$('#chatMsgs'); if(box) box.scrollTop=box.scrollHeight; }
+async function chatSend(e){ if(e)e.preventDefault(); const i=$('#chatText'); if(!i)return; const txt=i.value.trim(); if(!txt)return; i.value='';
+  try{ const { error }=await sb.from('messages').insert({space_id:SPACE.id,user_id:session.user.id,author:(session.user.email||''),text:txt}); if(error)throw error; }
+  catch(err){ console.warn('chat send',err); toast('Message non envoyé'); i.value=txt; } }
+function chatUnmount(){ try{ if(CHAT.chan) sb.removeChannel(CHAT.chan); }catch(_){} const cr=$('#chatRoot'); if(cr) cr.remove(); CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false}; }
 async function signOutUI(){ closeModal(); await doSignOut(); }
 function modal(inner){ let root=$('#modalRoot'); if(!root){ root=document.createElement('div'); root.id='modalRoot'; document.body.appendChild(root); }
   root.innerHTML='<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true">'+inner+'</div></div>'; }
