@@ -240,6 +240,19 @@
   #modalRoot .modal-foot { padding: 14px 22px 18px; display: flex; gap: 10px; align-items: center; }
   .code-row { display: flex; gap: 10px; align-items: center; }
   .invite { font-family: ui-monospace, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: .12em; background: var(--blue-soft); color: var(--blue-ink); padding: 8px 14px; border-radius: 10px; flex: 1; text-align: center; }
+
+  /* Space banner (haut de l'accueil) */
+  .space-banner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .space-banner::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, var(--blue), var(--pink)); }
+  .sb-info { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 160px; }
+  .sb-ic { width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--blue) 14%, var(--panel)); display: grid; place-items: center; font-size: 20px; flex: none; }
+  .sb-name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .sb-sub { font-size: 12px; color: var(--faint); font-weight: 600; }
+  .sb-code { display: flex; flex-direction: column; gap: 2px; cursor: pointer; padding: 4px 4px; border-radius: 10px; }
+  .sb-code:hover .sb-val { border-color: var(--blue); }
+  .sb-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+  .sb-val { font-family: ui-monospace, Menlo, monospace; font-size: 19px; font-weight: 700; letter-spacing: .14em; color: var(--blue-ink); background: var(--blue-soft); border: 1px solid transparent; padding: 5px 12px; border-radius: 9px; transition: .15s; }
+  @media (max-width: 640px) { .space-banner { gap: 10px; } .sb-share { width: 100%; } .sb-code { flex-direction: row; align-items: center; gap: 8px; } }
 </style>
 
 <div class="topbar">
@@ -366,6 +379,14 @@ function openAccount(){ const email=(session&&session.user.email)||''; const cod
    +'</div><div class="modal-foot"><span style="flex:1"></span><button class="btn btn-ghost btn-sm" onclick="signOutUI()" style="color:var(--pink-ink)">Se déconnecter</button></div>');
 }
 function copyCode(c){ try{ navigator.clipboard.writeText(c); }catch(_){} toast('Code copié'); }
+function spaceBanner(){ if(!(CLOUD&&session&&SPACE)) return ''; const code=SPACE.invite_code, nm=SPACE.name;
+  return '<div class="space-banner">'
+    +'<div class="sb-info"><span class="sb-ic">🧭</span><div><div class="sb-name">'+esc(nm)+'</div><div class="sb-sub">Votre espace partagé</div></div></div>'
+    +'<div class="sb-code" onclick="copyCode(\''+esc(code)+'\')" title="Copier le code"><span class="sb-lbl">Code à partager</span><code class="sb-val">'+esc(code)+'</code></div>'
+    +'<button class="btn btn-primary btn-sm sb-share" onclick="shareSpace()">📤 Partager</button>'
+    +'</div>'; }
+function shareSpace(){ if(!SPACE) return; const code=SPACE.invite_code; const txt='Rejoins notre espace « '+SPACE.name+' » sur Voyages Uribe Labreche 🌍✈️\nCode : '+code;
+  if(navigator.share){ navigator.share({title:'Voyages Uribe Labreche',text:txt}).catch(()=>{}); } else { try{ navigator.clipboard.writeText(txt); }catch(_){} toast('Invitation copiée ✦'); } }
 async function signOutUI(){ closeModal(); await doSignOut(); }
 function modal(inner){ let root=$('#modalRoot'); if(!root){ root=document.createElement('div'); root.id='modalRoot'; document.body.appendChild(root); }
   root.innerHTML='<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true">'+inner+'</div></div>'; }
@@ -421,6 +442,7 @@ function renderHome(){
         ${nP?`<span class="chip-stat">${nP} lieu${nP>1?'x':''}</span>`:''}${nT?`<span class="chip-stat">${nT} TikTok</span>`:''}</div>
     </button>`; }).join('');
   return `<div class="wrap">
+    ${spaceBanner()}
     <div class="hero">
       <h1>Prépare & documente <span class="grad">tes voyages</span></h1>
       <p class="lead">Fais tourner la planète, puis clique les pays où tu veux aller.</p>
