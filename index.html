@@ -286,8 +286,8 @@ function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ if(isC
 /* ============ Cloud (Supabase) — comptes + espace partagé ============ */
 /* Renseigne ces deux valeurs (projet Supabase) pour activer les comptes.
    Laisse vide -> l'app reste 100% locale (comme avant). */
-const SUPABASE_URL = "";       // ex: https://xxxx.supabase.co
-const SUPABASE_ANON_KEY = "";  // clé publique "anon"
+const SUPABASE_URL = "https://tylrqphkevnptzvshtio.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bHJxcGhrZXZucHR6dnNodGlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNzc0NDcsImV4cCI6MjEwMDc1MzQ0N30.tHqyRQElmKGeEaFTnHyyfqFcGbm8IW7qJ0KuAYIIcg8";
 let sb=null, CLOUD=false, session=null, SPACE=null, realtimeChan=null, importOffered=false, _rlt=null;
 const DIRTY=new Set();
 const newId=()=> (self.crypto&&crypto.randomUUID)?crypto.randomUUID():(uid()+uid());
