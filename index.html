@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages : carte du monde interactive, villes par pays, dates, TikTok, lieux notés et albums Drive.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde interactive, villes par pays, comptes et espace partagé.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -213,6 +213,33 @@
   .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--ground); padding: 11px 20px; border-radius: 999px; font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 200; opacity: 0; transition: .25s; pointer-events: none; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .hidden { display: none !important; }
+
+  /* Auth / space gates */
+  .gate { min-height: calc(100vh - 66px); display: grid; place-items: center; padding: 24px 16px 60px; }
+  .gate-card { width: min(400px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg); padding: 30px 26px; display: flex; flex-direction: column; }
+  .gate-logo { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--pink)); color: #fff; display: grid; place-items: center; font-size: 26px; margin: 0 auto 16px; box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--pink) 55%, transparent); }
+  .gate-title { text-align: center; font-size: 24px; font-weight: 750; letter-spacing: -.02em; }
+  .gate-title .gate-sub { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; background: linear-gradient(90deg, var(--blue), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .gate-lead { text-align: center; color: var(--muted); font-size: 14px; margin: 8px 0 18px; }
+  .gate-tabs { display: flex; gap: 6px; background: var(--ground); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+  .gate-tabs button { flex: 1; border: 0; background: none; padding: 8px; border-radius: 9px; font-size: 13.5px; font-weight: 650; color: var(--muted); }
+  .gate-tabs button.on { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+  .gate-err { color: var(--pink-ink); font-size: 13px; margin-top: 10px; min-height: 16px; text-align: center; }
+  .gate-or { text-align: center; color: var(--faint); font-size: 12px; margin: 12px 0; text-transform: uppercase; letter-spacing: .1em; }
+  .gate-foot { text-align: center; margin-top: 16px; }
+  .linklike { background: none; border: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+  .linklike:hover { color: var(--blue); }
+
+  /* Modal */
+  #modalRoot .overlay { position: fixed; inset: 0; z-index: 100; background: rgba(16,22,40,.5); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; opacity: 0; animation: fade .18s forwards; }
+  @keyframes fade { to { opacity: 1; } }
+  #modalRoot .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-lg); width: min(460px, 100%); max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+  #modalRoot .modal-head { padding: 20px 22px 12px; display: flex; align-items: center; gap: 12px; }
+  #modalRoot .modal-head h3 { font-size: 18px; font-weight: 720; letter-spacing: -.02em; flex: 1; }
+  #modalRoot .modal-body { padding: 4px 22px; overflow-y: auto; }
+  #modalRoot .modal-foot { padding: 14px 22px 18px; display: flex; gap: 10px; align-items: center; }
+  .code-row { display: flex; gap: 10px; align-items: center; }
+  .invite { font-family: ui-monospace, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: .12em; background: var(--blue-soft); color: var(--blue-ink); padding: 8px 14px; border-radius: 10px; flex: 1; text-align: center; }
 </style>
 
 <div class="topbar">
@@ -221,6 +248,7 @@
     <span class="brand-name">Voyages<span class="sub">Uribe Labreche</span></span>
   </button>
   <span class="spacer"></span>
+  <span id="acct"></span>
   <button class="icon-btn" id="themeBtn" title="Changer le thème" aria-label="Changer le thème">◐</button>
 </div>
 
@@ -253,7 +281,128 @@ const DB_NAME='vul-db', STORE='kv';
 function openDB(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=()=>r.result.createObjectStore(STORE); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
 async function loadState(){ try{ const db=await openDB(); const v=await new Promise((res,rej)=>{ const t=db.transaction(STORE,'readonly').objectStore(STORE).get('state'); t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); if(v&&v.trips) STATE=v; }catch(e){ try{ const ls=localStorage.getItem('vul-state'); if(ls) STATE=JSON.parse(ls); }catch(_){} } }
 let saveTimer;
-function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ try{ const db=await openDB(); db.transaction(STORE,'readwrite').objectStore(STORE).put(STATE,'state'); }catch(e){ try{ localStorage.setItem('vul-state',JSON.stringify(STATE)); }catch(_){} } },350); }
+function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ if(isCloudReady()){ flushCloud(); return; } try{ const db=await openDB(); db.transaction(STORE,'readwrite').objectStore(STORE).put(STATE,'state'); }catch(e){ try{ localStorage.setItem('vul-state',JSON.stringify(STATE)); }catch(_){} } },350); }
+
+/* ============ Cloud (Supabase) — comptes + espace partagé ============ */
+/* Renseigne ces deux valeurs (projet Supabase) pour activer les comptes.
+   Laisse vide -> l'app reste 100% locale (comme avant). */
+const SUPABASE_URL = "";       // ex: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = "";  // clé publique "anon"
+let sb=null, CLOUD=false, session=null, SPACE=null, realtimeChan=null, importOffered=false, _rlt=null;
+const DIRTY=new Set();
+const newId=()=> (self.crypto&&crypto.randomUUID)?crypto.randomUUID():(uid()+uid());
+const isCloudReady=()=>!!(CLOUD&&session&&SPACE);
+
+async function initCloud(){
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY) return false;
+  try{ const m=await import('https://esm.sh/@supabase/supabase-js@2.45.4');
+    sb=m.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+    CLOUD=true; return true;
+  }catch(e){ console.warn('Supabase indisponible → mode local',e); CLOUD=false; return false; }
+}
+async function cloudStart(){
+  try{ const { data }=await sb.auth.getSession(); session=data.session; }catch(e){ session=null; }
+  sb.auth.onAuthStateChange((_e,s)=>{ const had=!!session; session=s; if(!s){ SPACE=null; } routeCloud(); });
+  await routeCloud();
+}
+async function routeCloud(){
+  if(!CLOUD){ render(); return; }
+  mountAccountBtn();
+  if(!session){ renderAuthGate('in'); return; }
+  if(!SPACE) await ensureSpace();
+  mountAccountBtn();
+  if(!SPACE){ renderSpaceGate('choose'); return; }
+  await loadTripsCloud(); subscribeRealtime(); render(); maybeOfferImport();
+}
+async function ensureSpace(){
+  try{ const { data,error }=await sb.from('space_members').select('spaces(id,name,invite_code)').limit(1);
+    SPACE=(!error && data && data.length && data[0].spaces)?data[0].spaces:null;
+  }catch(e){ SPACE=null; }
+}
+async function loadTripsCloud(){
+  try{ const { data,error }=await sb.from('trips').select('id,data,updated_at').eq('space_id',SPACE.id).order('updated_at',{ascending:false});
+    if(error) throw error; STATE.trips=(data||[]).map(r=>Object.assign({},r.data,{id:r.id}));
+  }catch(e){ console.warn('load trips',e); }
+}
+async function flushCloud(){
+  const ids=[...DIRTY]; DIRTY.clear();
+  for(const id of ids){ const t=tripById(id); if(!t) continue;
+    try{ const { error }=await sb.from('trips').upsert({id:t.id,space_id:SPACE.id,data:t,updated_by:session.user.id,updated_at:new Date().toISOString()}); if(error) throw error; }
+    catch(e){ console.warn('upsert',e); DIRTY.add(id); toast('Synchronisation en attente…'); }
+  }
+}
+function subscribeRealtime(){
+  try{ if(realtimeChan) sb.removeChannel(realtimeChan);
+    realtimeChan=sb.channel('trips-'+SPACE.id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'trips',filter:'space_id=eq.'+SPACE.id},()=>{ if(DIRTY.size) return; clearTimeout(_rlt); _rlt=setTimeout(async()=>{ await loadTripsCloud(); render(); },350); })
+      .subscribe();
+  }catch(e){ console.warn('realtime',e); }
+}
+function trAuth(m){ m=m||''; if(/Invalid login/i.test(m)) return 'Email ou mot de passe incorrect.'; if(/already registered/i.test(m)) return 'Cet email a déjà un compte — connecte-toi.'; if(/at least 6/i.test(m)) return 'Mot de passe : 6 caractères minimum.'; if(/valid email/i.test(m)) return 'Entre un email valide.'; return m; }
+async function doSignUp(email,pw,ferr){ const { data,error }=await sb.auth.signUp({email,password:pw}); if(error){ ferr(trAuth(error.message)); return; } if(!data.session) ferr('Compte créé ✦ Si un email de confirmation arrive, clique-le, puis connecte-toi.'); }
+async function doSignIn(email,pw,ferr){ const { error }=await sb.auth.signInWithPassword({email,password:pw}); if(error) ferr(trAuth(error.message)); }
+async function doSignOut(){ try{ if(realtimeChan) sb.removeChannel(realtimeChan); }catch(_){} SPACE=null; STATE.trips=[]; importOffered=false; await sb.auth.signOut(); }
+async function doCreateSpace(name,ferr){ try{ const { data,error }=await sb.rpc('create_space',{p_name:name||'Notre espace'}); if(error) throw error; SPACE=data; routeCloud(); }catch(e){ ferr("Impossible de créer l'espace : "+(e.message||e)); } }
+async function doJoinSpace(code,ferr){ const c=(code||'').trim().toUpperCase(); if(!c){ ferr('Entre un code.'); return; } try{ const { data,error }=await sb.rpc('join_space',{p_code:c}); if(error) throw error; if(!data){ ferr('Code introuvable.'); return; } SPACE=data; routeCloud(); }catch(e){ ferr('Code invalide ou introuvable.'); } }
+async function maybeOfferImport(){ if(importOffered) return; importOffered=true; if(STATE.trips.length>0) return;
+  try{ const db=await openDB(); const v=await new Promise((res)=>{ const t=db.transaction(STORE,'readonly').objectStore(STORE).get('state'); t.onsuccess=()=>res(t.result); t.onerror=()=>res(null); });
+    if(v&&v.trips&&v.trips.length && confirm('Importer tes '+v.trips.length+' voyage(s) de cet appareil dans l’espace partagé ?')){
+      for(const t of v.trips){ t.id=t.id||newId(); STATE.trips.push(t); DIRTY.add(t.id); }
+      await flushCloud(); render(); toast('Voyages importés ✦');
+    }
+  }catch(e){}
+}
+
+/* ---- Account button + modal ---- */
+function mountAccountBtn(){ const el=$('#acct'); if(!el) return; if(!CLOUD||!session){ el.innerHTML=''; return; }
+  el.innerHTML='<button class="icon-btn" id="acctBtn" title="Mon compte" aria-label="Mon compte">👤</button>';
+  $('#acctBtn').onclick=openAccount;
+}
+function openAccount(){ const email=(session&&session.user.email)||''; const code=SPACE?SPACE.invite_code:''; const nm=SPACE?SPACE.name:'';
+  modal('<div class="modal-head"><span class="brand-mark" style="width:30px;height:30px;font-size:15px;border-radius:9px">👤</span><h3>Mon compte</h3><button class="icon-btn" onclick="closeModal()" aria-label="Fermer">✕</button></div>'
+   +'<div class="modal-body"><p style="font-size:14px;color:var(--muted);margin:0 0 16px">Connecté·e en tant que<br><b style="color:var(--ink)">'+esc(email)+'</b></p>'
+   +(SPACE?('<label class="lbl">Espace partagé</label><div style="font-weight:700;margin:2px 0 14px">'+esc(nm)+'</div>'
+     +'<label class="lbl">Code d’invitation — partage-le pour rejoindre cet espace</label><div class="code-row" style="margin-top:6px"><code class="invite">'+esc(code)+'</code><button class="btn btn-ghost btn-sm" onclick="copyCode(\''+esc(code)+'\')">Copier</button></div>'):'')
+   +'</div><div class="modal-foot"><span style="flex:1"></span><button class="btn btn-ghost btn-sm" onclick="signOutUI()" style="color:var(--pink-ink)">Se déconnecter</button></div>');
+}
+function copyCode(c){ try{ navigator.clipboard.writeText(c); }catch(_){} toast('Code copié'); }
+async function signOutUI(){ closeModal(); await doSignOut(); }
+function modal(inner){ let root=$('#modalRoot'); if(!root){ root=document.createElement('div'); root.id='modalRoot'; document.body.appendChild(root); }
+  root.innerHTML='<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true">'+inner+'</div></div>'; }
+function closeModal(){ const root=$('#modalRoot'); if(root) root.innerHTML=''; }
+
+/* ---- Gates ---- */
+function renderAuthGate(mode){ mode=mode||'in'; const app=$('#app');
+  app.innerHTML='<div class="gate"><div class="gate-card">'
+   +'<div class="gate-logo">✈</div><h1 class="gate-title">Voyages<span class="gate-sub">Uribe Labreche</span></h1>'
+   +'<p class="gate-lead">'+(mode==='in'?'Connecte-toi pour retrouver vos voyages partagés.':'Crée ton compte pour commencer à deux.')+'</p>'
+   +'<div class="gate-tabs"><button class="'+(mode==='in'?'on':'')+'" onclick="renderAuthGate(\'in\')">Connexion</button><button class="'+(mode==='up'?'on':'')+'" onclick="renderAuthGate(\'up\')">Créer un compte</button></div>'
+   +'<label class="lbl">Email</label><input class="input" id="authEmail" type="email" autocomplete="email" placeholder="toi@email.com">'
+   +'<label class="lbl" style="margin-top:10px">Mot de passe</label><input class="input" id="authPw" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="••••••••">'
+   +'<div class="gate-err" id="authErr"></div>'
+   +'<button class="btn btn-primary" id="authGo" style="width:100%;margin-top:8px">'+(mode==='in'?'Se connecter':'Créer mon compte')+'</button>'
+   +'</div></div>';
+  const go=$('#authGo'); const err=m=>{ $('#authErr').textContent=m; };
+  go.onclick=async()=>{ const em=$('#authEmail').value.trim(), pw=$('#authPw').value; err(''); if(!em||!pw){ err('Entre ton email et ton mot de passe.'); return; } go.disabled=true; const lbl=go.textContent; go.textContent='…'; if(mode==='up') await doSignUp(em,pw,err); else await doSignIn(em,pw,err); go.disabled=false; go.textContent=lbl; };
+  $('#authPw').addEventListener('keydown',e=>{ if(e.key==='Enter') go.click(); });
+}
+function renderSpaceGate(mode){ mode=mode||'choose'; const app=$('#app'); let html;
+  if(mode==='choose'){ html='<div class="gate-logo">🧭</div><h1 class="gate-title">Votre espace</h1><p class="gate-lead">Un espace partagé réunit tous vos voyages, à deux.</p>'
+    +'<button class="btn btn-primary" style="width:100%;margin-top:2px" onclick="renderSpaceGate(\'create\')">Créer notre espace</button>'
+    +'<div class="gate-or">ou</div><button class="btn btn-ghost" style="width:100%" onclick="renderSpaceGate(\'join\')">Rejoindre avec un code</button>'
+    +'<div class="gate-foot"><button class="linklike" onclick="signOutUI()">Se déconnecter</button></div>'; }
+  else if(mode==='create'){ html='<div class="gate-logo">🧭</div><h1 class="gate-title">Créer notre espace</h1>'
+    +'<label class="lbl">Nom de l’espace</label><input class="input" id="spName" placeholder="Nos voyages">'
+    +'<div class="gate-err" id="spErr"></div><button class="btn btn-primary" id="spGo" style="width:100%;margin-top:8px">Créer l’espace</button>'
+    +'<div class="gate-foot"><button class="linklike" onclick="renderSpaceGate(\'choose\')">← Retour</button></div>'; }
+  else { html='<div class="gate-logo">🧭</div><h1 class="gate-title">Rejoindre un espace</h1>'
+    +'<label class="lbl">Code d’invitation</label><input class="input" id="spCode" placeholder="Ex : A1B2C3" style="text-transform:uppercase;letter-spacing:.1em">'
+    +'<div class="gate-err" id="spErr"></div><button class="btn btn-primary" id="spGo" style="width:100%;margin-top:8px">Rejoindre</button>'
+    +'<div class="gate-foot"><button class="linklike" onclick="renderSpaceGate(\'choose\')">← Retour</button></div>'; }
+  app.innerHTML='<div class="gate"><div class="gate-card">'+html+'</div></div>';
+  if(mode==='create'){ const b=$('#spGo'); b.onclick=async()=>{ b.disabled=true; await doCreateSpace($('#spName').value.trim(),m=>{ $('#spErr').textContent=m; b.disabled=false; }); }; }
+  if(mode==='join'){ const b=$('#spGo'); b.onclick=async()=>{ b.disabled=true; await doJoinSpace($('#spCode').value,m=>{ $('#spErr').textContent=m; b.disabled=false; }); }; $('#spCode').addEventListener('keydown',e=>{ if(e.key==='Enter')$('#spGo').click(); }); }
+}
 
 /* ============ Router ============ */
 const tripById=id=>STATE.trips.find(t=>t.id===id);
@@ -359,8 +508,8 @@ function updatePicker(){ const box=$('#pickerChips'), btn=$('#createBtn'); if(!b
 }
 function createTripFromSelection(){ const ids=[...SEL]; if(!ids.length) return; const countries=ids.map(id=>{ const f=GEO[id-1]; return {name:f.n,flag:flagFromISO(f.i),iso:f.i,regions:[]}; });
   const names=countries.map(c=>c.name); const name=names.length<=2?names.join(' & '):names.slice(0,2).join(', ')+' +'+(names.length-2);
-  const t={ id:uid(), name, createdAt:new Date().toISOString(), countries, startDate:'', endDate:'', tiktoks:[], places:[], albums:[] };
-  STATE.trips.unshift(t); save(); SEL.clear(); go('trip',t.id); toast('Voyage créé ✦'); }
+  const t={ id:newId(), name, createdAt:new Date().toISOString(), countries, startDate:'', endDate:'', tiktoks:[], places:[], albums:[] };
+  STATE.trips.unshift(t); DIRTY.add(t.id); save(); SEL.clear(); go('trip',t.id); toast('Voyage créé ✦'); }
 
 function setupSearch(){
   const inp=$('#geoSearch'), res=$('#geoResults'); if(!inp) return; let acts=[], ai=-1;
@@ -466,9 +615,9 @@ function cardAlbums(t){ const items=(t.albums||[]).map(x=>`<div class="link-item
       <button class="btn btn-primary btn-sm" onclick="addAlbum('${t.id}')">Ajouter</button></div></div>`; }
 
 /* mutations */
-function withTrip(id,fn){ const t=tripById(id); if(t){ fn(t); save(); } }
+function withTrip(id,fn){ const t=tripById(id); if(t){ fn(t); DIRTY.add(id); save(); } }
 function renameTrip(id,name){ withTrip(id,t=>{ t.name=name.trim()||t.name; }); }
-function deleteTrip(id){ const t=tripById(id); if(!confirm('Supprimer le voyage « '+(t?t.name:'')+' » et tout son contenu ?')) return; STATE.trips=STATE.trips.filter(x=>x.id!==id); save(); go('home'); toast('Voyage supprimé'); }
+function deleteTrip(id){ const t=tripById(id); if(!confirm('Supprimer le voyage « '+(t?t.name:'')+' » et tout son contenu ?')) return; STATE.trips=STATE.trips.filter(x=>x.id!==id); DIRTY.delete(id); if(isCloudReady()){ sb.from('trips').delete().eq('id',id).then(()=>{},()=>{}); } else { save(); } go('home'); toast('Voyage supprimé'); }
 function setDate(id,key,val){ withTrip(id,t=>{ t[key]=val; }); render(); }
 function addRegion(id,ci){ const name=prompt('Région ou ville à visiter :'); if(!name||!name.trim()) return; withTrip(id,t=>t.countries[ci].regions.push(name.trim())); render(); }
 function delRegion(id,ci,ri){ withTrip(id,t=>t.countries[ci].regions.splice(ri,1)); render(); }
@@ -492,7 +641,7 @@ function initTheme(){ const saved=localStorage.getItem('vul-theme'); if(saved) d
   $('#themeBtn').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); const next=cur==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',next); localStorage.setItem('vul-theme',next); }; }
 
 /* boot */
-(async function(){ initTheme(); await loadState(); render(); })();
+(async function(){ initTheme(); const ok=await initCloud(); if(ok){ await cloudStart(); } else { await loadState(); render(); } })();
 </script>
 </body>
 </html>
