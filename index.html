@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde interactive, villes par pays, comptes et espace partagé.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde interactive, cartes-pays réalistes avec villes, comptes et espace partagé.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -107,12 +107,24 @@
   .map-tip.show { opacity: 1; }
   .map-hint { color: var(--faint); font-size: 12.5px; margin: 10px 0 16px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: center; }
   /* per-country map + city picker */
-  .cmap { width: 100%; height: auto; max-height: 340px; display: block; margin: 4px 0 12px; overflow: hidden; border-radius: 12px; background: #fff; border: 1px solid var(--line); }
-  .cmap .cshape { fill: #fff; stroke: #C4CCDB; stroke-width: .8; vector-effect: non-scaling-stroke; }
-  .cmap .cdot { fill: #fff; stroke: #94A0B8; stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: r .12s, stroke .12s; }
-  .cmap .cdot:hover { stroke: var(--blue); stroke-width: 1.5; }
-  .cmap .cdot.on { stroke: #fff; stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgba(20,30,60,.3)); }
-  .cmap .clbl { fill: #16223C; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; }
+  .cmap { width: 100%; height: auto; max-height: 380px; display: block; margin: 4px 0 12px; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .cmap .neigh path { fill: #e8edf3; stroke: #dae0e9; stroke-width: .6; vector-effect: non-scaling-stroke; }
+  .cmap .cshape { stroke: #a2c4af; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .cmap .cnode { cursor: pointer; }
+  .cmap .hit { fill: transparent; }
+  .cmap .cdot { fill: #fff; stroke: #7d93b3; stroke-width: 1.2; vector-effect: non-scaling-stroke; transition: r .12s, stroke .12s; }
+  .cmap .cnode:hover .cdot { stroke: var(--blue); stroke-width: 1.7; }
+  .cmap .cnode.on .cdot { stroke: #fff; stroke-width: 1.6; filter: drop-shadow(0 1px 2px rgba(20,30,60,.4)); }
+  .cmap .clbl { fill: #3a4560; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; pointer-events: none; opacity: .7; }
+  .cmap .clbl.on { fill: #C43168; opacity: 1; }
+  @media (max-width: 640px) {
+    .brand-name { font-size: 15px; }
+    .card-head .hint { display: none; }
+    .cmap { max-height: 56vh; }
+    .country-block { padding: 12px; }
+    .globe-search input { font-size: 16px; }
+    .input, .date-input { font-size: 16px; }
+  }
   .cmap-hint { color: var(--faint); font-size: 12.5px; margin: 2px 0 2px; }
   .ct-count { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--pink-ink); background: var(--pink-soft); padding: 3px 10px; border-radius: 999px; }
   @media (max-width: 640px) {
@@ -556,26 +568,44 @@ let _isoIdx=null,_nameIdx=null;
 function geoIndexOfCountry(c){ if(!_isoIdx){ _isoIdx={}; _nameIdx={}; GEO.forEach((g,i)=>{ if(g.i)_isoIdx[g.i]=i; _nameIdx[g.n]=i; }); } if(c.iso&&_isoIdx[c.iso]!=null)return _isoIdx[c.iso]; if(_nameIdx[c.name]!=null)return _nameIdx[c.name]; return -1; }
 function citiesFor(k){ const iso=GEO[k].i; return (typeof CITIES!=='undefined'&&iso&&CITIES[iso])?CITIES[iso]:[]; }
 function bboxLargest(f){ let best=null,bn=-1; for(const poly of f.p){ let n=0; for(const ring of poly)n+=ring.length; if(n>bn){bn=n;best=poly;} } let a=1e9,b=1e9,c=-1e9,dd=-1e9; for(const ring of best){ let prev=null; for(let i=0;i<ring.length;i++){ let lon=ring[i][0]; const lat=ring[i][1]; if(prev!==null){ while(lon-prev>180)lon-=360; while(lon-prev<-180)lon+=360; } prev=lon; const X=projX(lon),Y=projY(lat); if(X<a)a=X; if(Y<b)b=Y; if(X>c)c=X; if(Y>dd)dd=Y; } } return {minx:a,miny:b,maxx:c,maxy:dd}; }
+let _bboxCache=null;
+function bboxCached(k){ if(!_bboxCache)_bboxCache={}; if(_bboxCache[k])return _bboxCache[k]; const f=GEO[k]; let a=1e9,b=1e9,c=-1e9,d=-1e9; for(const poly of f.p)for(const ring of poly){ let prev=null; for(let i=0;i<ring.length;i++){ let lon=ring[i][0]; const lat=ring[i][1]; if(prev!==null){ while(lon-prev>180)lon-=360; while(lon-prev<-180)lon+=360; } prev=lon; const X=projX(lon),Y=projY(lat); if(X<a)a=X; if(Y<b)b=Y; if(X>c)c=X; if(Y>d)d=Y; } } return _bboxCache[k]={minx:a,miny:b,maxx:c,maxy:d}; }
+function pathData(f){ let d=''; for(const poly of f.p)for(const ring of poly)d+=ringPath(ring); return d; }
 function countryMapSVG(k, tripId, ci){
   const f=GEO[k]; const cities=citiesFor(k);
   let bb;
   if(cities.length){ let a=1e9,b=1e9,c=-1e9,dd=-1e9; for(const ct of cities){ const X=projX(ct[1]),Y=projY(ct[2]); if(X<a)a=X; if(Y<b)b=Y; if(X>c)c=X; if(Y>dd)dd=Y; } bb={minx:a,miny:b,maxx:c,maxy:dd}; }
   else bb=bboxLargest(f);
-  let bw=(bb.maxx-bb.minx), bh=(bb.maxy-bb.miny); if(bw<24)bw=24; if(bh<24)bh=24;
+  let bw=(bb.maxx-bb.minx), bh=(bb.maxy-bb.miny); if(bw<22)bw=22; if(bh<22)bh=22;
   const cx0=(bb.minx+bb.maxx)/2, cy0=(bb.miny+bb.maxy)/2;
-  const padx=bw*0.18+4, pady=bh*0.18+4; const x=cx0-bw/2-padx, y=cy0-bh/2-pady, w=bw+padx*2, h=bh+pady*2;
-  const dim=Math.max(w,h); const r=+(dim*0.011).toFixed(2); const fs=+(dim*0.028).toFixed(2);
-  let d=''; for(const poly of f.p) for(const ring of poly) d+=ringPath(ring);
+  const padx=bw*0.24+6, pady=bh*0.24+6; const x=cx0-bw/2-padx, y=cy0-bh/2-pady, w=bw+padx*2, h=bh+pady*2;
+  const dim=Math.max(w,h); const r=+(dim*0.013).toFixed(2); const fs=+(dim*0.03).toFixed(2); const sd=+(dim*0.006).toFixed(3);
+  let neigh='';
+  for(let j=0;j<GEO.length;j++){ if(j===k||isSkipped(GEO[j])) continue; const nb=bboxCached(j); if(nb.maxx<x||nb.minx>x+w||nb.maxy<y||nb.miny>y+h) continue; neigh+='<path d="'+pathData(GEO[j])+'"/>'; }
+  const d=pathData(f);
   const t=tripById(tripId); const regions=(t&&t.countries[ci].regions)||[];
-  const gid='cg_'+tripId+'_'+ci;
-  let dots='',labels='';
-  cities.forEach(c=>{ const cx=+projX(c[1]).toFixed(2), cy=+projY(c[2]).toFixed(2); const on=regions.includes(c[0]); const jn=(''+c[0]).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    dots+='<circle class="cdot'+(on?' on':'')+'" cx="'+cx+'" cy="'+cy+'" r="'+(on?(r*1.7).toFixed(2):r)+'" '+(on?'fill="url(#'+gid+')" ':'')+'onclick="toggleCity(\''+tripId+'\','+ci+',\''+jn+'\')"><title>'+esc(c[0])+'</title></circle>';
-    if(on) labels+='<text class="clbl" x="'+(cx+r*2.4).toFixed(2)+'" y="'+(cy+fs*0.35).toFixed(2)+'" font-size="'+fs+'">'+esc(c[0])+'</text>';
+  const gid='cg_'+tripId+'_'+ci, lgid='lg_'+tripId+'_'+ci, ogid='og_'+tripId+'_'+ci, sid='sh_'+tripId+'_'+ci;
+  let nodes='',labels='';
+  cities.forEach((c,idx)=>{ const cxp=+projX(c[1]).toFixed(2), cyp=+projY(c[2]).toFixed(2); const on=regions.includes(c[0]); const big=idx===0; const jn=(''+c[0]).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const rr=on?(r*1.6):(big?r*1.15:r);
+    nodes+='<g class="cnode'+(on?' on':'')+'" onclick="toggleCity(\''+tripId+'\','+ci+',\''+jn+'\')">'
+      +'<circle class="hit" cx="'+cxp+'" cy="'+cyp+'" r="'+(r*2.8).toFixed(2)+'"/>'
+      +'<circle class="cdot" cx="'+cxp+'" cy="'+cyp+'" r="'+rr.toFixed(2)+'" '+(on?'fill="url(#'+gid+')" ':'')+'/>'
+      +'<title>'+esc(c[0])+'</title></g>';
+    if(on||big) labels+='<text class="clbl'+(on?' on':'')+'" x="'+(cxp+r*2.2).toFixed(2)+'" y="'+(cyp+fs*0.34).toFixed(2)+'" font-size="'+fs.toFixed(2)+'">'+esc(c[0])+'</text>';
   });
   return '<svg class="cmap" viewBox="'+x.toFixed(2)+' '+y.toFixed(2)+' '+w.toFixed(2)+' '+h.toFixed(2)+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
-    +'<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--blue)"/><stop offset="1" stop-color="var(--pink)"/></linearGradient></defs>'
-    +'<path class="cshape" fill-rule="evenodd" d="'+d+'"/>'+dots+labels+'</svg>';
+    +'<defs>'
+    +'<linearGradient id="'+gid+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B5FE3"/><stop offset="1" stop-color="#F0568C"/></linearGradient>'
+    +'<linearGradient id="'+lgid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6faf3"/><stop offset="1" stop-color="#dcecdf"/></linearGradient>'
+    +'<radialGradient id="'+ogid+'" cx="0.5" cy="0.38" r="0.8"><stop offset="0" stop-color="#eff7fd"/><stop offset="1" stop-color="#d5e6f4"/></radialGradient>'
+    +'<filter id="'+sid+'" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="'+sd+'" stdDeviation="'+sd+'" flood-color="rgba(28,48,88,.30)"/></filter>'
+    +'</defs>'
+    +'<rect class="ocean" x="'+(x-6).toFixed(2)+'" y="'+(y-6).toFixed(2)+'" width="'+(w+12).toFixed(2)+'" height="'+(h+12).toFixed(2)+'" fill="url(#'+ogid+')"/>'
+    +'<g class="neigh">'+neigh+'</g>'
+    +'<path class="cshape" fill="url(#'+lgid+')" fill-rule="evenodd" filter="url(#'+sid+')" d="'+d+'"/>'
+    +'<g class="cnodes">'+nodes+'</g>'+labels
+    +'</svg>';
 }
 function toggleCity(id,ci,name){ withTrip(id,t=>{ const arr=t.countries[ci].regions; const i=arr.indexOf(name); if(i>=0)arr.splice(i,1); else arr.push(name); }); render(); }
 
