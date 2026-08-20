@@ -1,0 +1,21 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "23 7 */2 * *"   # tous les 2 jours
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (garde le projet actif)
+        env:
+          URL: "https://tylrqphkevnptzvshtio.supabase.co"
+          ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5bHJxcGhrZXZucHR6dnNodGlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxNzc0NDcsImV4cCI6MjEwMDc1MzQ0N30.tHqyRQElmKGeEaFTnHyyfqFcGbm8IW7qJ0KuAYIIcg8"
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+            "$URL/rest/v1/trips?select=id&limit=1")
+          echo "Supabase: HTTP $code"
+          [ "$code" = "000" ] && exit 1 || true
