@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages à deux : liste de voyages, carte du monde, cartes-pays, comptes, espace partagé et chat.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : liste de voyages, carte, compte + espace partagé et chat.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -246,6 +246,15 @@
   .pw-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; font-size: 16px; padding: 6px; opacity: .6; }
   .pw-eye:hover { opacity: 1; }
   .create-cta { display: block; width: 100%; max-width: 440px; margin: 28px auto 4px; padding: 15px; font-size: 16px; }
+  .acct-btn { width: 38px; height: 38px; border-radius: 50%; border: 0; background: linear-gradient(135deg, var(--blue), var(--pink)); color: #fff; font-weight: 700; font-size: 15px; display: grid; place-items: center; box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--pink) 55%, transparent); }
+  .acct-btn:hover { transform: translateY(-1px); }
+  .home-acct { text-align: center; margin-top: 16px; }
+  .acct-page { max-width: 440px; margin: 8px auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .acct-avatar { width: 78px; height: 78px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--pink)); color: #fff; font-size: 32px; font-weight: 750; display: grid; place-items: center; box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--pink) 50%, transparent); margin-bottom: 14px; }
+  .acct-email { font-size: 19px; font-weight: 700; letter-spacing: -.02em; word-break: break-all; }
+  .acct-role { color: var(--muted); font-size: 13px; margin: 2px 0 20px; }
+  .acct-card { width: 100%; text-align: left; margin-top: 0; }
+  .logout-btn { margin-top: 22px; color: var(--pink-ink); }
 
   /* Modal */
   #modalRoot .overlay { position: fixed; inset: 0; z-index: 100; background: rgba(16,22,40,.5); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; opacity: 0; animation: fade .18s forwards; }
@@ -405,8 +414,26 @@ async function maybeOfferImport(){ if(importOffered) return; importOffered=true;
 
 /* ---- Account button + modal ---- */
 function mountAccountBtn(){ const el=$('#acct'); if(!el) return; if(!CLOUD||!session){ el.innerHTML=''; return; }
-  el.innerHTML='<button class="icon-btn" id="acctBtn" title="Mon compte" aria-label="Mon compte">👤</button>';
-  $('#acctBtn').onclick=openAccount;
+  const email=(session.user.email||''); const initial=(email.trim()[0]||'?').toUpperCase();
+  el.innerHTML='<button class="acct-btn" id="acctBtn" title="Mon compte" aria-label="Mon compte">'+esc(initial)+'</button>';
+  $('#acctBtn').onclick=()=>go('account');
+}
+function renderAccount(){ const email=(session&&session.user.email)||''; const nm=SPACE?SPACE.name:''; const code=SPACE?SPACE.invite_code:''; const initial=(email.trim()[0]||'?').toUpperCase();
+  return `<div class="wrap">
+    <button class="back" onclick="go('home')">← Mes voyages</button>
+    <div class="acct-page">
+      <div class="acct-avatar">${esc(initial)}</div>
+      <h1 class="acct-email">${esc(email)}</h1>
+      <p class="acct-role">Connecté·e</p>
+      ${SPACE?`<div class="card acct-card">
+        <div class="card-head"><span class="ic blue">🧭</span><h3 style="flex:1">${esc(nm)}</h3></div>
+        <label class="lbl">Code d’invitation — partage-le pour rejoindre cet espace</label>
+        <div class="code-row" style="margin-top:6px"><code class="invite">${esc(code)}</code><button class="btn btn-ghost btn-sm" onclick="copyCode('${esc(code)}')">Copier</button></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="shareSpace()">📤 Partager l’espace</button>
+      </div>`:''}
+      <button class="btn btn-ghost logout-btn" onclick="signOutUI()">Se déconnecter</button>
+    </div>
+  </div>`;
 }
 function openAccount(){ const email=(session&&session.user.email)||''; const code=SPACE?SPACE.invite_code:''; const nm=SPACE?SPACE.name:'';
   modal('<div class="modal-head"><span class="brand-mark" style="width:30px;height:30px;font-size:15px;border-radius:9px">👤</span><h3>Mon compte</h3><button class="icon-btn" onclick="closeModal()" aria-label="Fermer">✕</button></div>'
@@ -500,7 +527,9 @@ function go(name,tripId){ VIEW={name,tripId:tripId||null}; render(); window.scro
 function render(){ const app=$('#app');
   if(VIEW.name==='trip'&&trip()){ app.innerHTML=renderTrip(trip()); }
   else if(VIEW.name==='map'){ app.innerHTML=renderMapPicker(); mountMap(); }
+  else if(VIEW.name==='account'&&CLOUD&&session){ app.innerHTML=renderAccount(); }
   else { VIEW.name='home'; app.innerHTML=renderHome(); }
+  if(CLOUD&&session) mountAccountBtn();
 }
 function openMapPicker(){ SEL.clear(); go('map'); }
 
@@ -520,6 +549,7 @@ function renderHome(){
     ${trips.length?`<div class="grid">${cards}</div>`
       :`<div class="empty"><div style="font-size:42px;margin-bottom:10px">🧳</div><div style="font-weight:700;color:var(--ink);font-size:17px;margin-bottom:4px">Aucun voyage pour l’instant</div>Crée ton premier voyage en choisissant un pays sur la carte.</div>`}
     <button class="btn btn-primary create-cta" onclick="openMapPicker()">＋ Créer un voyage</button>
+    ${(CLOUD&&session)?`<div class="home-acct"><button class="linklike" onclick="go('account')">👤 Mon compte · ${esc(session.user.email||'')}</button></div>`:''}
   </div>`;
 }
 function renderMapPicker(){
