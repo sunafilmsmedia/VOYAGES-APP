@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages à deux : liste de voyages, carte, compte + espace partagé et chat.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : liste, carte, compte, espace partagé et chat en temps réel.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -391,7 +391,8 @@ async function flushCloud(){
   }
 }
 function subscribeRealtime(){
-  try{ if(realtimeChan) sb.removeChannel(realtimeChan);
+  try{ if(session&&session.access_token&&sb.realtime&&sb.realtime.setAuth){ try{ sb.realtime.setAuth(session.access_token); }catch(_){} }
+    if(realtimeChan) sb.removeChannel(realtimeChan);
     realtimeChan=sb.channel('trips-'+SPACE.id)
       .on('postgres_changes',{event:'*',schema:'public',table:'trips',filter:'space_id=eq.'+SPACE.id},()=>{ if(DIRTY.size) return; clearTimeout(_rlt); _rlt=setTimeout(async()=>{ await loadTripsCloud(); render(); },350); })
       .subscribe();
@@ -453,7 +454,7 @@ function shareSpace(){ if(!SPACE) return; const code=SPACE.invite_code; const tx
   if(navigator.share){ navigator.share({title:'Voyages Uribe Labreche',text:txt}).catch(()=>{}); } else { try{ navigator.clipboard.writeText(txt); }catch(_){} toast('Invitation copiée ✦'); } }
 
 /* ---- Chat de l'espace (temps réel) ---- */
-let CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false};
+let CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false,poll:null};
 function chatMount(){ if(CHAT.mounted||!isCloudReady()) return; CHAT.mounted=true;
   let root=$('#chatRoot'); if(!root){ root=document.createElement('div'); root.id='chatRoot'; document.body.appendChild(root); }
   root.innerHTML='<button class="chat-fab" id="chatFab" onclick="chatToggle()" aria-label="Messages">💬<span class="chat-badge" id="chatBadge" style="display:none">0</span></button>'
@@ -462,20 +463,29 @@ function chatMount(){ if(CHAT.mounted||!isCloudReady()) return; CHAT.mounted=tru
     +'<form class="chat-input" onsubmit="chatSend(event)"><input id="chatText" placeholder="Écris un message…" autocomplete="off" maxlength="1000"><button class="btn btn-primary btn-sm" type="submit">Envoyer</button></form></div>';
   chatLoad(); chatSubscribe();
 }
-function chatToggle(){ CHAT.open=!CHAT.open; const p=$('#chatPanel'); if(p)p.classList.toggle('open',CHAT.open); if(CHAT.open){ CHAT.unread=0; chatBadge(); setTimeout(()=>{ const i=$('#chatText'); if(i)i.focus(); chatScroll(); },60); } }
+function chatToggle(){ CHAT.open=!CHAT.open; const p=$('#chatPanel'); if(p)p.classList.toggle('open',CHAT.open);
+  if(CHAT.open){ CHAT.unread=0; chatBadge(); chatLoad(); if(!CHAT.poll) CHAT.poll=setInterval(()=>{ if(CHAT.open) chatLoad(); },5000); setTimeout(()=>{ const i=$('#chatText'); if(i)i.focus(); chatScroll(); },60); }
+  else { if(CHAT.poll){ clearInterval(CHAT.poll); CHAT.poll=null; } } }
 function chatBadge(){ const b=$('#chatBadge'); if(!b)return; if(CHAT.unread>0&&!CHAT.open){ b.style.display=''; b.textContent=CHAT.unread>9?'9+':CHAT.unread; } else b.style.display='none'; }
-async function chatLoad(){ try{ const { data,error }=await sb.from('messages').select('id,user_id,author,text,created_at').eq('space_id',SPACE.id).order('created_at',{ascending:true}).limit(100); if(error)throw error; CHAT.msgs=data||[]; chatRenderMsgs(); }catch(e){ console.warn('chat load',e); } }
-function chatSubscribe(){ try{ if(CHAT.chan) sb.removeChannel(CHAT.chan);
-  CHAT.chan=sb.channel('msg-'+SPACE.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'space_id=eq.'+SPACE.id},(p)=>{ const m=p.new; if(!m||CHAT.msgs.some(x=>x.id===m.id))return; CHAT.msgs.push(m); if(!CHAT.open && m.user_id!==session.user.id){ CHAT.unread++; chatBadge(); } chatRenderMsgs(); }).subscribe();
-}catch(e){ console.warn('chat rt',e); } }
+function chatAddMsg(m){ if(!m||CHAT.msgs.some(x=>x.id===m.id)) return; CHAT.msgs.push(m); if(!CHAT.open && m.user_id!==session.user.id){ CHAT.unread++; chatBadge(); } chatRenderMsgs(); }
+async function chatLoad(){ try{ const { data,error }=await sb.from('messages').select('id,user_id,author,text,created_at').eq('space_id',SPACE.id).order('created_at',{ascending:true}).limit(200); if(error)throw error;
+    const arr=data||[]; const ids=new Set(arr.map(x=>x.id)); for(const m of CHAT.msgs){ if(!ids.has(m.id)) arr.push(m); }
+    arr.sort((a,b)=> a.created_at<b.created_at?-1:(a.created_at>b.created_at?1:0));
+    const before=CHAT.msgs.length; CHAT.msgs=arr;
+    // compter les nouveaux reçus si le chat est fermé (cas du polling)
+    chatRenderMsgs(); }catch(e){ console.warn('chat load',e); } }
+function chatSubscribe(){ try{ if(session&&session.access_token&&sb.realtime&&sb.realtime.setAuth){ try{ sb.realtime.setAuth(session.access_token); }catch(_){} }
+    if(CHAT.chan) sb.removeChannel(CHAT.chan);
+    CHAT.chan=sb.channel('msg-'+SPACE.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'space_id=eq.'+SPACE.id},(p)=>{ chatAddMsg(p.new); }).subscribe();
+  }catch(e){ console.warn('chat rt',e); } }
 function chatAuthor(m){ const a=m.author||''; return a.includes('@')?a.split('@')[0]:(a||'?'); }
 function chatRenderMsgs(){ const box=$('#chatMsgs'); if(!box)return; if(!CHAT.msgs.length){ box.innerHTML='<div class="chat-empty">Dis allo 👋</div>'; return; }
   box.innerHTML=CHAT.msgs.map(m=>{ const me=m.user_id===session.user.id; return '<div class="cmsg'+(me?' me':'')+'">'+(me?'':'<div class="cmsg-a">'+esc(chatAuthor(m))+'</div>')+'<div class="cmsg-b">'+esc(m.text)+'</div></div>'; }).join(''); chatScroll(); }
 function chatScroll(){ const box=$('#chatMsgs'); if(box) box.scrollTop=box.scrollHeight; }
 async function chatSend(e){ if(e)e.preventDefault(); const i=$('#chatText'); if(!i)return; const txt=i.value.trim(); if(!txt)return; i.value='';
-  try{ const { error }=await sb.from('messages').insert({space_id:SPACE.id,user_id:session.user.id,author:(session.user.email||''),text:txt}); if(error)throw error; }
+  try{ const { data,error }=await sb.from('messages').insert({space_id:SPACE.id,user_id:session.user.id,author:(session.user.email||''),text:txt}).select('id,user_id,author,text,created_at').single(); if(error)throw error; chatAddMsg(data); }
   catch(err){ console.warn('chat send',err); toast('Message non envoyé'); i.value=txt; } }
-function chatUnmount(){ try{ if(CHAT.chan) sb.removeChannel(CHAT.chan); }catch(_){} const cr=$('#chatRoot'); if(cr) cr.remove(); CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false}; }
+function chatUnmount(){ try{ if(CHAT.chan) sb.removeChannel(CHAT.chan); }catch(_){} if(CHAT.poll){ clearInterval(CHAT.poll); } const cr=$('#chatRoot'); if(cr) cr.remove(); CHAT={msgs:[],open:false,chan:null,unread:0,mounted:false,poll:null}; }
 async function signOutUI(){ closeModal(); await doSignOut(); }
 function modal(inner){ let root=$('#modalRoot'); if(!root){ root=document.createElement('div'); root.id='modalRoot'; document.body.appendChild(root); }
   root.innerHTML='<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true">'+inner+'</div></div>'; }
