@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Voyages Uribe Labreche</title>
-<meta name="description" content="Préparer et documenter tes voyages à deux : carte du monde, cartes-pays, comptes, espace partagé et chat en temps réel.">
+<meta name="description" content="Préparer et documenter tes voyages à deux : liste de voyages, carte du monde, cartes-pays, comptes, espace partagé et chat.">
 <meta name="theme-color" content="#FBFBFE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D1220" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8C%8D%3C/text%3E%3C/svg%3E">
@@ -241,6 +241,11 @@
   .gate-foot { text-align: center; margin-top: 16px; }
   .linklike { background: none; border: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
   .linklike:hover { color: var(--blue); }
+  .pw-wrap { position: relative; }
+  .pw-wrap .input { padding-right: 44px; }
+  .pw-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; font-size: 16px; padding: 6px; opacity: .6; }
+  .pw-eye:hover { opacity: 1; }
+  .create-cta { display: block; width: 100%; max-width: 440px; margin: 28px auto 4px; padding: 15px; font-size: 16px; }
 
   /* Modal */
   #modalRoot .overlay { position: fixed; inset: 0; z-index: 100; background: rgba(16,22,40,.5); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; opacity: 0; animation: fade .18s forwards; }
@@ -453,16 +458,22 @@ function closeModal(){ const root=$('#modalRoot'); if(root) root.innerHTML=''; }
 function renderAuthGate(mode){ mode=mode||'in'; const app=$('#app');
   app.innerHTML='<div class="gate"><div class="gate-card">'
    +'<div class="gate-logo">✈</div><h1 class="gate-title">Voyages<span class="gate-sub">Uribe Labreche</span></h1>'
-   +'<p class="gate-lead">'+(mode==='in'?'Connecte-toi pour retrouver vos voyages partagés.':'Crée ton compte pour commencer à deux.')+'</p>'
+   +'<p class="gate-lead">'+(mode==='in'?'Bon retour ! Connecte-toi pour retrouver vos voyages.':'Crée ton compte en quelques secondes.')+'</p>'
    +'<div class="gate-tabs"><button class="'+(mode==='in'?'on':'')+'" onclick="renderAuthGate(\'in\')">Connexion</button><button class="'+(mode==='up'?'on':'')+'" onclick="renderAuthGate(\'up\')">Créer un compte</button></div>'
-   +'<label class="lbl">Email</label><input class="input" id="authEmail" type="email" autocomplete="email" placeholder="toi@email.com">'
-   +'<label class="lbl" style="margin-top:10px">Mot de passe</label><input class="input" id="authPw" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="••••••••">'
+   +'<label class="lbl">Email</label><input class="input" id="authEmail" type="email" inputmode="email" autocapitalize="none" autocorrect="off" autocomplete="email" placeholder="toi@email.com">'
+   +'<label class="lbl" style="margin-top:10px">Mot de passe</label>'
+   +'<div class="pw-wrap"><input class="input" id="authPw" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="••••••••"><button type="button" class="pw-eye" id="pwEye" aria-label="Afficher/masquer le mot de passe">👁</button></div>'
    +'<div class="gate-err" id="authErr"></div>'
-   +'<button class="btn btn-primary" id="authGo" style="width:100%;margin-top:8px">'+(mode==='in'?'Se connecter':'Créer mon compte')+'</button>'
+   +'<button class="btn btn-primary" id="authGo" style="width:100%;margin-top:10px;padding:13px;font-size:15px">'+(mode==='in'?'Se connecter':'Créer mon compte')+'</button>'
+   +'<div class="gate-foot">'+(mode==='in'?'<button class="linklike" onclick="renderAuthGate(\'up\')">Pas encore de compte ? En créer un</button>':'<button class="linklike" onclick="renderAuthGate(\'in\')">Déjà un compte ? Se connecter</button>')+'</div>'
    +'</div></div>';
   const go=$('#authGo'); const err=m=>{ $('#authErr').textContent=m; };
-  go.onclick=async()=>{ const em=$('#authEmail').value.trim(), pw=$('#authPw').value; err(''); if(!em||!pw){ err('Entre ton email et ton mot de passe.'); return; } go.disabled=true; const lbl=go.textContent; go.textContent='…'; if(mode==='up') await doSignUp(em,pw,err); else await doSignIn(em,pw,err); go.disabled=false; go.textContent=lbl; };
-  $('#authPw').addEventListener('keydown',e=>{ if(e.key==='Enter') go.click(); });
+  const submit=async()=>{ const em=$('#authEmail').value.trim(), pw=$('#authPw').value; err(''); if(!em||!pw){ err('Entre ton email et ton mot de passe.'); return; } go.disabled=true; const lbl=go.textContent; go.textContent='…'; if(mode==='up') await doSignUp(em,pw,err); else await doSignIn(em,pw,err); go.disabled=false; go.textContent=lbl; };
+  go.onclick=submit;
+  $('#authEmail').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('#authPw').focus(); } });
+  $('#authPw').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submit(); } });
+  const eye=$('#pwEye'); eye.onclick=()=>{ const p=$('#authPw'); const show=p.type==='password'; p.type=show?'text':'password'; eye.textContent=show?'🙈':'👁'; };
+  setTimeout(()=>{ const e=$('#authEmail'); if(e) e.focus(); },80);
 }
 function renderSpaceGate(mode){ mode=mode||'choose'; const app=$('#app'); let html;
   if(mode==='choose'){ html='<div class="gate-logo">🧭</div><h1 class="gate-title">Votre espace</h1><p class="gate-lead">Un espace partagé réunit tous vos voyages, à deux.</p>'
@@ -486,7 +497,12 @@ function renderSpaceGate(mode){ mode=mode||'choose'; const app=$('#app'); let ht
 const tripById=id=>STATE.trips.find(t=>t.id===id);
 const trip=()=>tripById(VIEW.tripId);
 function go(name,tripId){ VIEW={name,tripId:tripId||null}; render(); window.scrollTo(0,0); }
-function render(){ const app=$('#app'); if(VIEW.name==='trip'&&trip()){ app.innerHTML=renderTrip(trip()); } else { VIEW.name='home'; app.innerHTML=renderHome(); mountMap(); } }
+function render(){ const app=$('#app');
+  if(VIEW.name==='trip'&&trip()){ app.innerHTML=renderTrip(trip()); }
+  else if(VIEW.name==='map'){ app.innerHTML=renderMapPicker(); mountMap(); }
+  else { VIEW.name='home'; app.innerHTML=renderHome(); }
+}
+function openMapPicker(){ SEL.clear(); go('map'); }
 
 /* ============ Home ============ */
 function renderHome(){
@@ -500,9 +516,18 @@ function renderHome(){
     </button>`; }).join('');
   return `<div class="wrap">
     ${spaceBanner()}
-    <div class="hero">
-      <h1>Prépare & documente <span class="grad">tes voyages</span></h1>
-      <p class="lead">Fais tourner la planète, puis clique les pays où tu veux aller.</p>
+    <div class="section-head" style="margin-top:6px"><h2>Mes voyages</h2><span class="count">${trips.length?trips.length+' voyage'+(trips.length>1?'s':''):''}</span></div>
+    ${trips.length?`<div class="grid">${cards}</div>`
+      :`<div class="empty"><div style="font-size:42px;margin-bottom:10px">🧳</div><div style="font-weight:700;color:var(--ink);font-size:17px;margin-bottom:4px">Aucun voyage pour l’instant</div>Crée ton premier voyage en choisissant un pays sur la carte.</div>`}
+    <button class="btn btn-primary create-cta" onclick="openMapPicker()">＋ Créer un voyage</button>
+  </div>`;
+}
+function renderMapPicker(){
+  return `<div class="wrap">
+    <button class="back" onclick="go('home')">← Mes voyages</button>
+    <div class="hero" style="padding-top:2px">
+      <h1>Où veux-tu <span class="grad">aller</span> ?</h1>
+      <p class="lead">Cherche un pays ou clique-le sur la carte — tu peux en choisir plusieurs.</p>
       <div class="globe-search">
         <span class="si">🔍</span>
         <input id="geoSearch" placeholder="Chercher un pays…" autocomplete="off" spellcheck="false">
@@ -522,13 +547,9 @@ function renderHome(){
       <p class="map-hint">✋ Glisse pour te déplacer · molette / pincer pour zoomer · 👆 clique un pays</p>
       <div class="picker-bar">
         <div class="picker-chips" id="pickerChips"></div>
-        <button class="btn btn-primary" id="createBtn" style="padding:12px 24px;font-size:15px" disabled onclick="createTripFromSelection()">＋ Préparer le voyage</button>
+        <button class="btn btn-primary" id="createBtn" style="padding:13px 26px;font-size:15px" disabled onclick="createTripFromSelection()">＋ Créer le voyage</button>
       </div>
     </div>
-    <div class="section-head"><h2>Mes voyages</h2><span class="count">${trips.length?trips.length+' voyage'+(trips.length>1?'s':''):''}</span></div>
-    ${trips.length?`<div class="grid">${cards}
-      <button class="add-card" onclick="document.querySelector('.globe-stage').scrollIntoView({behavior:'smooth',block:'center'})"><span class="plus">＋</span>Nouveau voyage</button></div>`
-      :`<div class="empty"><div style="font-size:34px;margin-bottom:8px">🧳</div>Aucun voyage pour l’instant.<br>Choisis des pays sur la planète pour commencer.</div>`}
   </div>`;
 }
 
